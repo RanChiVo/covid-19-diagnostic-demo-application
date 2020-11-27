@@ -1,0 +1,50 @@
+.app{
+  min-height: 100vh;
+  background: lightblue;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.tweet{
+  height: 300px;
+  width: 300px;
+  background: white;
+  border-radius: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+}   
+
+.red{
+  color: red;
+}
+
+.upload_display {
+  font-size: 20px;
+  max-width: 1500px;
+  justify-content: space-around;
+  margin-left: auto;
+  margin-right: auto;
+  align-items: center;
+  text-align: center;
+}
+
+.up_load_input,.up_load_btn{
+  margin-top:20px;
+  font-size: 30px;
+
+}
+
+.up_load_btn{
+  text-align: center;
+  margin-left: 100px;
+  font-size: 50px;
+  background: red;
+}
+
+.display_result{
+  text-align:center;
+  font-size: 30px;
+}
