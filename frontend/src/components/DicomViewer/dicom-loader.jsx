@@ -13,7 +13,7 @@ const httpGetAsync = (theUrl, callback) => {
 };
 const dicomLoader = cs => {
   const image1PixelData = new Promise(resolve => {
-    httpGetAsync("assets/dicom-image", response => {
+    httpGetAsync("assets/explicit_little.dcm", response => {
       const data = new DataView(response);
       const image = daikon.Series.parseImage(data);
       const spacing = image.getPixelSpacing();
@@ -30,8 +30,8 @@ const dicomLoader = cs => {
         height: image.getCols(),
         width: image.getRows(),
         color: false,
-        columnPixelSpacing: spacing[1],
-        rowPixelSpacing: spacing[0],
+        columnPixelSpacing: 0.8984375,
+            rowPixelSpacing: 0.8984375,
         sizeInBytes: image.getRows() * image.getCols() * 2
       });
     });
@@ -44,7 +44,6 @@ const dicomLoader = cs => {
       if (imageId === "example://1") {
         return image1PixelData;
       }
-
       throw new Error("unknown imageId");
     }
 
