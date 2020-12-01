@@ -7,52 +7,6 @@
 // import * as cornerstoneWADOImageLoader from "cornerstone-wado-image-loader";
 // // import exampleImageIdLoader from "./exampleImageIdLoader";
 
-// cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
-
-// // this function gets called once the user drops the file onto the div
-// function handleFileSelect(evt) {
-//     evt.stopPropagation();
-//     evt.preventDefault();
-
-//     // Get the FileList object that contains the list of files that were dropped
-//     const files = evt.dataTransfer.files;
-
-//     // this UI is only built for a single file so just dump the first one
-//     file = files[0];
-//     const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
-//     loadAndViewImage(imageId);
-// }
-
-// function handleDragOver(evt) {
-//     evt.stopPropagation();
-//     evt.preventDefault();
-//     evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-// }
-
-// // Setup the dnd listeners.
-// const dropZone = document.getElementById('dicomImage');
-// dropZone.addEventListener('dragover', handleDragOver, false);
-// dropZone.addEventListener('drop', handleFileSelect, false);
-
-
-// cornerstoneWADOImageLoader.configure({
-//     beforeSend: function(xhr) {
-//         // Add custom headers here (e.g. auth tokens)
-//         //xhr.setRequestHeader('x-auth-token', 'my auth token');
-//     },
-//     useWebWorkers: true,
-// });
-
-// let loaded = false;
-
-
-
-
-
-
-
-
-
 // class DicomViewer extends React.Component {
 
 //   componentWillMount() {
@@ -356,6 +310,7 @@ import * as cornerstoneTools from "cornerstone-tools";
 import * as cornerstoneMath from "cornerstone-math";
 import dicomLoader from "./dicom-loader";
 import * as cornerstoneWADOImageLoader from "cornerstone-wado-image-loader";
+import * as cornerstoneFileImageLoader from "cornerstone-file-image-loader";
 import { uid } from 'react-uid';
 import dicomParser from "dicom-parser";
 
@@ -372,6 +327,7 @@ class DicomViewer extends React.Component {
     console.log("cornerstoneTools", cornerstoneTools)
     cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
     cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
+    cornerstoneFileImageLoader.external.cornerstone = cornerstone;
   }
 
   componentDidMount() {
@@ -387,7 +343,11 @@ class DicomViewer extends React.Component {
 
     // this UI is only built for a single file so just dump the first one
     const file = files[0];
+    
+
+
     const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
+    //const imageId = cornerstoneFileImageLoader.fileManager.add(file);
     this.loadAndViewImage(imageId);
   }
 
@@ -466,19 +426,19 @@ class DicomViewer extends React.Component {
         return value + (value === 0 ? ' (pixel)' : ' (plane)');
       }
 
-      document.getElementById('transferSyntax').textContent = getTransferSyntax();
-      document.getElementById('sopClass').textContent = getSopClass();
+     document.getElementById('transferSyntax').textContent = getTransferSyntax();
+     document.getElementById('sopClass').textContent = getSopClass();
       document.getElementById('samplesPerPixel').textContent = image.data.uint16('x00280002');
       document.getElementById('photometricInterpretation').textContent = image.data.string('x00280004');
       document.getElementById('numberOfFrames').textContent = image.data.string('x00280008');
-      document.getElementById('planarConfiguration').textContent = getPlanarConfiguration();
+     document.getElementById('planarConfiguration').textContent = getPlanarConfiguration();
       document.getElementById('rows').textContent = image.data.uint16('x00280010');
       document.getElementById('columns').textContent = image.data.uint16('x00280011');
       document.getElementById('pixelSpacing').textContent = image.data.string('x00280030');
       document.getElementById('bitsAllocated').textContent = image.data.uint16('x00280100');
       document.getElementById('bitsStored').textContent = image.data.uint16('x00280101');
       document.getElementById('highBit').textContent = image.data.uint16('x00280102');
-      document.getElementById('pixelRepresentation').textContent = getPixelRepresentation();
+     document.getElementById('pixelRepresentation').textContent = getPixelRepresentation();
       document.getElementById('windowCenter').textContent = image.data.string('x00281050');
       document.getElementById('windowWidth').textContent = image.data.string('x00281051');
       document.getElementById('rescaleIntercept').textContent = image.data.string('x00281052');
@@ -508,7 +468,9 @@ class DicomViewer extends React.Component {
     cornerstone.enable(element);
     const update = (e) => {
       let file = e.target.files[0];
-      const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
+      console.log("id_image", file.type)
+       const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
+      //const imageId = cornerstoneFileImageLoader.fileManager.add(file);
       this.loadAndViewImage(imageId);
     }
     document.getElementById('selectFile').addEventListener('change', function (e) {
@@ -569,7 +531,7 @@ class DicomViewer extends React.Component {
     return (
       <div className="container">
         <div className="page-header">
-          <h1>Example of displaying a DICOM P10 from the local file system</h1>
+          <h1>A Demo a DICOM P10 from the local file system</h1>
           <p className="lead">
             Click "Choose File" and select a DICOM P10 file on your local file system or drag and drop a DICOM P10
             file.
