@@ -315,8 +315,12 @@ import { uid } from 'react-uid';
 import dicomParser from "dicom-parser";
 
 
-class DicomViewer extends React.Component {
+class DicomViewer extends React.Component<{}, { isDicomImage: boolean }> {
 
+  constructor(props) {
+    super(props);
+    this.state = { isDicomImage: false };
+  }
   // component start mounting
   // just run only once time
   componentWillMount() {
@@ -334,20 +338,31 @@ class DicomViewer extends React.Component {
     this.setupListenner();
     this.resolveListenner();
   }
+
+  addFile = (file) => {
+    let isDicom = false;
+    let imageFormat = file.type.split("/")[1];
+    let imageId = "";
+    if (imageFormat.localeCompare("dicom")==0) {
+      isDicom = true;
+      imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
+    }
+    else {
+      imageId = cornerstoneFileImageLoader.fileManager.add(file);
+      isDicom = false;
+    }
+    this.setState({ isDicomImage: isDicom });
+    return imageId;
+  }
+
   // this function gets called once the user drops the file onto the div
   handleFileSelect = (evt) => {
     evt.stopPropagation();
     evt.preventDefault();
     // Get the FileList object that contains the list of files that were dropped
     const files = evt.dataTransfer.files;
-
-    // this UI is only built for a single file so just dump the first one
-    const file = files[0];
-    
-
-
-    const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
-    //const imageId = cornerstoneFileImageLoader.fileManager.add(file);
+    const imageId = this.addFile(files[0]);
+    console.log("isDicomImage:",this.state.isDicomImage)
     this.loadAndViewImage(imageId);
   }
 
@@ -359,17 +374,29 @@ class DicomViewer extends React.Component {
   }
 
   setupListenner = () => {
-    // Setup the dnd listeners.
+    // Setup the dnd listeners.cornerstoneTools.zoom.setConfiguration(config);
     const dropZone = document.getElementById('dicomImage');
     dropZone.addEventListener('dragover', this.handleDragOver, false);
     dropZone.addEventListener('drop', this.handleFileSelect, false);
-    cornerstoneWADOImageLoader.configure({
-      beforeSend: function (xhr) {
-        // Add custom headers here (e.g. auth tokens)
-        //xhr.setRequestHeader('x-auth-token', 'my auth token');
-      },
-      useWebWorkers: true,
-    });
+    console.log("isDicomImage:",this.state.isDicomImage)
+    if (this.state.isDicomImage) {
+      cornerstoneWADOImageLoader.configure({
+        beforeSend: function (xhr) {
+          // Add custom headers here (e.g. auth tokens)
+          //xhr.setRequestHeader('x-auth-token', 'my auth token');
+        },
+        useWebWorkers: true,
+      });
+    }
+    else {
+      cornerstoneFileImageLoader.configure({
+        beforeSend: function (xhr) {
+          // Add custom headers here (e.g. auth tokens)
+          //xhr.setRequestHeader('x-auth-token', 'my auth token');
+        },
+        useWebWorkers: true,
+      });
+    }
   }
 
   //load image
@@ -378,6 +405,14 @@ class DicomViewer extends React.Component {
     const element = document.getElementById('dicomImage');
     const start = new Date().getTime();
     const loadedView = this.loaded;
+    const isDicom = this.state.isDicomImage;
+    const config = {
+      invert: true,
+      minScale: 0.25,
+      maxScale: 20.0,
+      preventZoomOutsideImage: true
+    };
+    cornerstoneTools.zoom.setConfiguration(config);
     cornerstone.loadImage(imageId).then(function (image) {
       console.log(image);
       const viewport = cornerstone.getDefaultViewportForImage(element, image);
@@ -400,6 +435,7 @@ class DicomViewer extends React.Component {
         cornerstoneTools.highlight.enable(element);
       }
 
+      if (isDicom) {
       function getTransferSyntax() {
         const value = image.data.string('x00020010');
         return value + ' [' + uid[value] + ']';
@@ -426,19 +462,19 @@ class DicomViewer extends React.Component {
         return value + (value === 0 ? ' (pixel)' : ' (plane)');
       }
 
-     document.getElementById('transferSyntax').textContent = getTransferSyntax();
-     document.getElementById('sopClass').textContent = getSopClass();
+      document.getElementById('transferSyntax').textContent = getTransferSyntax();
+      document.getElementById('sopClass').textContent = getSopClass();
       document.getElementById('samplesPerPixel').textContent = image.data.uint16('x00280002');
       document.getElementById('photometricInterpretation').textContent = image.data.string('x00280004');
       document.getElementById('numberOfFrames').textContent = image.data.string('x00280008');
-     document.getElementById('planarConfiguration').textContent = getPlanarConfiguration();
+      document.getElementById('planarConfiguration').textContent = getPlanarConfiguration();
       document.getElementById('rows').textContent = image.data.uint16('x00280010');
       document.getElementById('columns').textContent = image.data.uint16('x00280011');
       document.getElementById('pixelSpacing').textContent = image.data.string('x00280030');
       document.getElementById('bitsAllocated').textContent = image.data.uint16('x00280100');
       document.getElementById('bitsStored').textContent = image.data.uint16('x00280101');
       document.getElementById('highBit').textContent = image.data.uint16('x00280102');
-     document.getElementById('pixelRepresentation').textContent = getPixelRepresentation();
+      document.getElementById('pixelRepresentation').textContent = getPixelRepresentation();
       document.getElementById('windowCenter').textContent = image.data.string('x00281050');
       document.getElementById('windowWidth').textContent = image.data.string('x00281051');
       document.getElementById('rescaleIntercept').textContent = image.data.string('x00281052');
@@ -447,6 +483,8 @@ class DicomViewer extends React.Component {
       document.getElementById('fragments').textContent = image.data.elements.x7fe00010 && image.data.elements.x7fe00010.fragments ? image.data.elements.x7fe00010.fragments.length : '';
       document.getElementById('minStoredPixelValue').textContent = image.minPixelValue;
       document.getElementById('maxStoredPixelValue').textContent = image.maxPixelValue;
+    }
+    
       const end = new Date().getTime();
       const time = end - start;
       document.getElementById('totalTime').textContent = time + "ms";
@@ -468,9 +506,11 @@ class DicomViewer extends React.Component {
     cornerstone.enable(element);
     const update = (e) => {
       let file = e.target.files[0];
-      console.log("id_image", file.type)
-       const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
-      //const imageId = cornerstoneFileImageLoader.fileManager.add(file);
+
+
+      const imageId = this.addFile(file);
+      console.log("isDicomImage:",this.state.isDicomImage)
+
       this.loadAndViewImage(imageId);
     }
     document.getElementById('selectFile').addEventListener('change', function (e) {
@@ -538,7 +578,7 @@ class DicomViewer extends React.Component {
             </p>
         </div>
         {/* create a form to choose file from system */}
-        <div className="row"> 
+        <div className="row">
           <form id="form" className="form-horizontal">
             <div className="form-group">
               <div className="col-sm-3">
@@ -555,17 +595,17 @@ class DicomViewer extends React.Component {
 
         {/* Display */}
         <div className="row">
-        <div className="col-3">
-             <ul className="list-group">
-               <button
+          <div className="col-3">
+            <ul className="list-group">
+              <button
                 onClick={() => {
                   this.enableTool("wwwc", 1);
                 }}
                 className="list-group-item"
               >
-                 WW/WC
+                WW/WC
                </button>
-               <button
+              <button
                 onClick={() => {
                   this.enableTool("pan", 3);
                 }}
@@ -655,7 +695,7 @@ class DicomViewer extends React.Component {
               onContextMenu={() => false}
               unselectable="on"
               onMouseDown={() => false}
-              >
+            >
               <div id="dicomImage" style={{ width: '1024px', height: '1024px', top: '0px', left: '0px', position: 'absolute' }}></div>
             </div>
           </div>
