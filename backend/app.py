@@ -1,5 +1,7 @@
-from flask import Flask, request, jsonify
+import os
+from flask import Flask, request, jsonify, session
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 import urllib.request
 import joblib
 import pickle
@@ -7,17 +9,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_curve,auc,classification_report,confusion_matrix,accuracy_score
 from sklearn.svm import SVC
-from keras.preprocessing.image import load_img
-from keras.preprocessing.image import img_to_array
+from keras.preprocessing.image import load_img, img_to_array
 from keras.applications.inception_resnet_v2 import InceptionResNetV2
 from keras.applications.inception_resnet_v2 import preprocess_input
 from keras.preprocessing import image
 from keras.layers import Flatten
 from keras import Sequential
-import numpy as np
-import os
 from sklearn.preprocessing import LabelEncoder
-from tensorflow.keras.utils import to_categorical
+# from tensorflow.keras.utils import to_categorical
 from keras.models import Model
 from pickle import dump
 from imutils import paths
@@ -29,14 +28,23 @@ import argparse
 import imutils
 import time
 import cv2
-import os
-from numpy import asarray
-from numpy import save
-from numpy import load	
+from numpy import asarray, save, load
+from flask_mysqldb import MySQL
+from datetime import timedelta
 from flask_cors import CORS
+
 
 app = Flask(__name__)
 CORS(app) 
+app.secret_key = "secret key"
+app.config['PERMANENT_SESSION_LIFETIME'] =  timedelta(minutes=10)
+app.config['MYSQL_HOST'] = '127.0.0.1'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = ''
+app.config['MYSQL_DB'] = 'test'
+
+mysql = MySQL(app)
+
 app.config['MODEL_COVID'] = "model/svm_feature_resnet_v2.sav"
 app.config['IMAGE_SIZE'] = (224, 224)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -44,31 +52,165 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['ALLOWED_EXTENSIONS'] = set(['png', 'jpg', 'jpeg'])
 
 # Load model to extract feature
-model = InceptionResNetV2(weights='imagenet', include_top=False)
-extract_feature_model = Sequential()
-extract_feature_model.add(model)
-extract_feature_model.add(Flatten())
-extract_feature_model.summary()
-
+# model = InceptionResNetV2(weights='imagenet', include_top=False)
+# extract_feature_model = Sequential()
+# extract_feature_model.add(model)
+# extract_feature_model.add(Flatten())
+# extract_feature_model.summary()
+    
 # Load model to predict
-svm_covid_file = open(app.config['MODEL_COVID'], 'rb')
-svm_covid_model = pickle.load(svm_covid_file)
-svm_covid_file.close()
+# svm_covid_file = open(app.config['MODEL_COVID'], 'rb')
+# svm_covid_model = pickle.load(svm_covid_file)
+# svm_covid_file.close()
 
 # Image input path
 image_input_paths = []
 
+@app.route('/get_patients', methods =['GET']) 
+def get_all_patients(): 
+    cursor = None
+    print("GET DATA")
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT * FROM Patient")
+        patients = cursor.fetchall()
+        print("patients",patients)
+        output = [] 
+        for patient in patients:
+            print(patient[1])
+            output.append({ 
+                'id': patient[0], 
+                'fullname' : patient[1],
+                'created_date' : patient[2],
+                'gender' : patient[3],
+                'date_of_birth' : patient[4],
+                'address' : patient[5],
+                'phone' : patient[6],
+                'email' : patient[7],
+                'quarantine_status' : patient[8],
+            }) 
+        print("output", output)
+        resp = jsonify({'patients': output}) 
+        return resp
+    except Exception as e:
+        print(e)
+    finally:
+        if cursor:
+            cursor.close()
+
+@app.route('/get_images', methods =['GET']) 
+def get_all_images(): 
+    cursor = None
+    print("GET DATA")
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT * FROM Image")
+        images = cursor.fetchall()
+        print("images",images)
+        output = [] 
+        for image in images:
+            print(image[1])
+            output.append({ 
+                'id_image': image[0], 
+                'url' : image[1],
+                'uploaded_date' : image[2],
+                'diagnostis_result' : image[3],
+                'size_image' : image[4],
+                'patient_id' : image[5],
+            }) 
+        print("output", output)
+        resp = jsonify({'images': output}) 
+        return resp
+    except Exception as e:
+        print(e)
+    finally:
+        if cursor:
+            cursor.close()
+
+@app.route('/get_patient/<id>', methods =['GET']) 
+def get_patient_id(id): 
+    cursor = None
+    print("GET DATA")
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT * FROM Patient WHERE id=%s', [id])
+        patients = cursor.fetchall()
+        print("patients",patients)
+        output = [] 
+        for patient in patients:
+            print(patient[1])
+            output.append({ 
+                'id': patient[0], 
+                'fullname' : patient[1],
+                'created_date' : patient[2],
+                'gender' : patient[3],
+                'date_of_birth' : patient[4],
+                'address' : patient[5],
+                'phone' : patient[6],
+                'email' : patient[7],
+                'quarantine_status' : patient[8],
+            }) 
+        print("output", output)
+        resp = jsonify({'patients': output}) 
+        return resp
+    except Exception as e:
+        print(e)
+    finally:
+        if cursor:
+            cursor.close()
+
 @app.route('/')
-def hello():
-    return "Hello world"
+def home():
+	if 'username' in session:
+		username = session['username']
+		return jsonify({'message' : 'You are already logged in', 'username' : username})
+	else:
+		resp = jsonify({'message' : 'Unauthorized'})
+		resp.status_code = 401
+		return resp
 
-# this route sends back list of users users 
-@app.route('/test', methods =['GET']) 
-#Sample GET function 
-def test():
-    return '''<h1> Manny B in the house! Fraud Detection API : IOO</h1>
-<p> A POC for the use of Machiasdfne learning to detect Credit Cards Frauds.</p>'''
+@app.route('/login', methods=['POST'])
+def login():
+    cursor = None
+    print("LOGIN")
+    try:
+        _username = request.form['username'] 
+        _password = request.form['password'] 
+        print("user:",_username)
+        print("password",_password)	
+        # validate the received values
+        if _username and _password:
+            #check user exists			
+            cursor = mysql.connection.cursor()
+            cursor.execute("SELECT * FROM User WHERE username=%s",(_username,))
+            row = cursor.fetchone()
+            print("row",row)
+            if row:
+                print("row[2]:", row[2])
+                print("password:", _password)
+                if check_password_hash(row[2], _password):
+                    session['username'] = row[1]
+                    return jsonify({'message' : 'You are logged in successfully'})
+                else:
+                    resp = jsonify({'message' : 'Bad Request - invalid password'})
+                    resp.status_code = 400
+                    return resp
+        else:
+            resp = jsonify({'message' : 'Bad Request - invalid credendtials'})
+            resp.status_code = 400
+            return resp
 
+    except Exception as e:
+        print(e)
+    finally:
+        if cursor:
+            cursor.close()
+
+@app.route('/logout')
+def logout():
+	if 'username' in session:
+		session.pop('username', None)
+	return jsonify({'message' : 'You successfully logged out'})
 
 @app.route('/info', methods=['GET'])
 def info():

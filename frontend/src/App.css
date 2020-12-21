@@ -1,9 +1,5 @@
 .app{
-  min-height: 100vh;
-  background: lightblue;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
+  border: solid rgb(62, 186, 214);
 }
 
 .tweet{
@@ -49,3 +45,6 @@
   font-size: 30px;
 }
 
+.display_app{
+  border-bottom: solid rgb(29, 153, 175);
+}

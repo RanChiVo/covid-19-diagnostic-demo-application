@@ -3,6 +3,9 @@ import { useForm } from 'react-hook-form';
 import '../App.css';
 import ReactPanZoom from "react-image-pan-zoom-rotate";
 
+
+
+
 var image = null;
 const Form = () => {
   const { register, handleSubmit } = useForm();

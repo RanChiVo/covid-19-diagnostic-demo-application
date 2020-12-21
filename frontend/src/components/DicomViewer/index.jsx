@@ -313,7 +313,7 @@ import * as cornerstoneWADOImageLoader from "cornerstone-wado-image-loader";
 import * as cornerstoneFileImageLoader from "cornerstone-file-image-loader";
 import { uid } from 'react-uid';
 import dicomParser from "dicom-parser";
-
+import '/home/mot/Documents/version_control/demo_covid/frontend/src/components/DicomViewer/dicomViewer.css';
 
 class DicomViewer extends React.Component<{}, { isDicomImage: boolean }> {
 
@@ -571,7 +571,7 @@ class DicomViewer extends React.Component<{}, { isDicomImage: boolean }> {
     return (
       <div className="container">
         <div className="page-header">
-          <h1>A Demo a DICOM P10 from the local file system</h1>
+          <h1>A Demo help view medical image from the local file system</h1>
           <p className="lead">
             Click "Choose File" and select a DICOM P10 file on your local file system or drag and drop a DICOM P10
             file.
