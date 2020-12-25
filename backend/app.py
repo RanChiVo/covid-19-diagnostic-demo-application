@@ -137,7 +137,7 @@ def get_patient_id(id):
         patients = cursor.fetchall()
         print("patients",patients)
         output = [] 
-        for patient in patients:
+        for patient in patients:    
             print(patient[1])
             output.append({ 
                 'id': patient[0], 

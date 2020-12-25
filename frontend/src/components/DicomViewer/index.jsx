@@ -308,7 +308,6 @@ import Hammer from "hammerjs";
 import * as cornerstone from "cornerstone-core";
 import * as cornerstoneTools from "cornerstone-tools";
 import * as cornerstoneMath from "cornerstone-math";
-import dicomLoader from "./dicom-loader";
 import * as cornerstoneWADOImageLoader from "cornerstone-wado-image-loader";
 import * as cornerstoneFileImageLoader from "cornerstone-file-image-loader";
 import { uid } from 'react-uid';
@@ -380,7 +379,7 @@ class DicomViewer extends React.Component<{}, { isDicomImage: boolean }> {
     dropZone.addEventListener('drop', this.handleFileSelect, false);
     console.log("isDicomImage:",this.state.isDicomImage)
     if (this.state.isDicomImage) {
-      cornerstoneWADOImageLoader.configure({
+      cornerstoneWADOImageLoader.configure({  
         beforeSend: function (xhr) {
           // Add custom headers here (e.g. auth tokens)
           //xhr.setRequestHeader('x-auth-token', 'my auth token');
