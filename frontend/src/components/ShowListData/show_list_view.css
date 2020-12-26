@@ -1,0 +1,75 @@
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #000000;
+    border: none;
+  }
+
+.table {
+    border: none;
+    text-align: center;
+    table-layout: fixed;
+    color: #ffffff; 
+    font-family: Roboto,OpenSans,HelveticaNeue-Light,Helvetica Neue Light,Helvetica Neue,Helvetica,Arial,Lucida Grande,sans-serif;
+    font-size: 14px;
+    line-height: 1.42857143;
+    
+  }
+
+  .table-bordered td, .table-bordered th {
+    border: none;
+}
+
+.table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
+  background-color:  #04141f;
+  color: White;
+  
+}
+
+.info {
+  color: rgb(145, 185, 205);
+  background-color: #080d13;
+  width: 100%;
+  text-align: center;
+  padding: 30px;
+}
+
+table th, table td {
+  overflow: hidden;
+}
+
+.table_list_patient {
+  padding-left: 130px;
+  padding-right: 130px;
+}
+
+.form_list {
+  background-color: black;
+  height: 100vh;
+  margin: 0;
+}
+
+.table thead th {
+  vertical-align: bottom;
+  border-bottom: 2px solid #00a4d9;;
+}
+
+.total_patients{
+  border-color: black;
+  border-bottom: solid black 2px;
+  text-align: 120px;
+  padding: 20px;
+  background-color: #151a1f;
+  width: 100%;
+}
+
+.title_total_patients {
+  color:rgb(145, 185, 205);
+  padding-left: 120px;
+}
+
+.list_patients{
+  color: #ffffff; 
+  font-family: Roboto,OpenSans,HelveticaNeue-Light,Helvetica Neue Light,Helvetica Neue,Helvetica,Arial,Lucida Grande,sans-serif;
+  font-size: 16px;
+  line-height: 1.42857143;
+}

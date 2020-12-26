@@ -2,7 +2,7 @@
 import React, { Component } from 'react';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import BootstrapTable from 'react-bootstrap-table-next';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import '/home/mot/Documents/version_control/demo_covid/frontend/src/components/ShowListData/show_list_view.css';
 import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
 import axios from 'axios';
 import {
@@ -18,8 +18,20 @@ import {
 
 import DicomViewer from "../DicomViewer"
 class ShowListData extends Component {
+
   constructor(props) {
     super(props);
+
+    this.style_filter = {
+      border: 'none',
+      color: 'White',
+      height: '40px',
+      margin: '0 5px 20px 5px',
+      padding: '0 20px',
+      backgroundColor: '#516873',
+
+    };
+
     this.state = {
       isLoaded: false,
       redirect: null,
@@ -27,57 +39,57 @@ class ShowListData extends Component {
       columns: [{
         dataField: 'address',
         text: 'Address',
-        filter: textFilter() 
+        filter: textFilter({ style: this.style_filter })
       },
       {
         dataField: 'created_date',
         text: 'Created Date',
-
+        style: { 'padding': '20px' },
+        filter: textFilter({ style: this.style_filter })
       }
         , {
         dataField: 'date_of_birth',
         text: 'Date Of Birth',
         sort: true,
-        filter: textFilter() 
+        filter: textFilter({ style: this.style_filter })
       },
       {
         dataField: 'email',
         text: 'Email',
         sort: true,
-        filter: textFilter() 
+        filter: textFilter({ style: this.style_filter })
       },
       {
         dataField: 'fullname',
         text: 'Fullname',
         sort: true,
-        filter: textFilter()  
+        filter: textFilter({ style: this.style_filter })
       },
       {
         dataField: 'gender',
         text: 'Gender',
         sort: true,
-        filter: textFilter() 
+        filter: textFilter({ style: this.style_filter })
       },
       {
         dataField: 'id',
         text: 'Id',
         sort: true,
-        filter: textFilter() 
+        filter: textFilter({ style: this.style_filter })
       },
       {
         dataField: 'phone',
         text: 'Phone',
         sort: true,
-        filter: textFilter() 
+        filter: textFilter({ style: this.style_filter })
       },
       {
         dataField: 'quarantine_status',
         text: 'Quarantine Status',
         sort: true,
-        filter: textFilter() 
+        filter: textFilter({ style: this.style_filter })
       },]
     };
-    console.log("hello")
   }
 
   componentDidMount() {
@@ -120,15 +132,29 @@ class ShowListData extends Component {
     window.location.reload();
   }
 
+  handle_click_row = {
+    onClick: (e, row, rowIndex) => {
+      const { history } = this.props;
+    history.push({
+      pathname: `/images/${row.fullname}`,
+      data: row.id // your data array of objects
+    })
+    window.location.reload();
+    },
+    onMouseEnter: (e, row, rowIndex) => {
+      console.log(`enter on row with index: ${rowIndex}`);
+    }
+  }
 
   render() {
+    const selectRow = { mode: 'checkbox', bgColor: 'Gray' };
     const { error, isLoaded, items } = this.state;
     const options = {
       page: 2,
       sizePerPageList: [{
-        text: '5', value: 5
+        text: '5', value: 2
       }, {
-        text: '10', value: 10
+        text: '10', value: 2
       }, {
         text: 'All', value: this.state.items.length
       }],
@@ -148,7 +174,7 @@ class ShowListData extends Component {
       return <div>Loading...</div>;
     } else {
       return (
-        <div>
+        <div className="list_patients">
           <ul>
             <ul>
               {/* {this.state.items.map(item => (
@@ -158,21 +184,29 @@ class ShowListData extends Component {
           ))}    */}
             </ul>
           </ul>
-          <div className="container">
+          <div className="info">
+            LIST OF PATIENTS AND THEIR X-RAYS
+             </div>
+          <div className="total_patients">
             <div className="row" className="hdr">
-              <div className="col-xl-12 btn btn-info">
-                React Bootstrap Table with Searching and Custom Pagination
+              <div className="col-xl-12 title_total_patients">
+                STUDYLIST
              </div>
             </div>
-            <div style={{ marginTop: 20,  }}>
-              <BootstrapTable
-                striped
-                hover
-                keyField='id'
-                data={this.state.items}
-                columns={this.state.columns}
-                filter={ filterFactory() }   
-                pagination={paginationFactory()} />
+          </div>
+          <div className="form_list">
+            <div className="table_list_patient" >
+
+              <div style={{ backgroundColor: '#151a1f' }}>
+                <BootstrapTable
+                  striped
+                  hover
+                  keyField='id'
+                  data={this.state.items}
+                  columns={this.state.columns}
+                  filter={filterFactory()}
+                  pagination={paginationFactory()} selectRow={selectRow}  rowEvents={this.handle_click_row} />
+              </div>
             </div>
           </div>
         </div>
