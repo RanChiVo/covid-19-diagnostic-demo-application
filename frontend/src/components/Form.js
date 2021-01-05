@@ -3,9 +3,6 @@ import { useForm } from 'react-hook-form';
 import '../App.css';
 import ReactPanZoom from "react-image-pan-zoom-rotate";
 
-
-
-
 var image = null;
 const Form = () => {
   const { register, handleSubmit } = useForm();
@@ -13,20 +10,20 @@ const Form = () => {
   const [preview, setPreview] = useState()
   const [datas, setData] = useState([]);
   
-
   const onSubmit = async (image_path) => {
     const formData = new FormData();
+    console.log("image_path", image_path.file[0])
     if(image_path){
     formData.append("file", image_path.file[0]);
+    console.log("image_path", image_path.file[0])
     const res = await fetch("http://127.0.0.1:5000/file-upload", {
       method: "POST",
       body: formData
     }).then(res => res.json())
-      .then(function (image_path) {
-        console.log(image_path);
+      .then(function(image_path) {
         setData(image_path);
         alert('Upload image successfully');
-      })
+      })  
       .catch(function (error) {
         console.log(error);
       });

@@ -1,3 +1,48 @@
 .page-header{
   border-bottom: solid rgb(29, 153, 175);
+  text-align: center;
 }
+
+.detect_btn {
+  background-color: black;
+  font-size: 15px;
+  border: solid #9ccef9 4px;
+  color: #ffffff;
+  margin-bottom: 5px;
+  margin-left: 5px;
+
+}
+
+.feature_button{
+  display: flex;
+  background: rgb(9, 7, 7);
+}
+
+.feature_button .list-group-item {
+  margin: 5px;
+  padding: 8px;
+  font-size: 10px;
+  color:#9ccef9;
+}
+
+.show_image {
+  background-color: black;
+  margin: 0;
+}
+
+.info_image {
+  color: white;
+}
+
+.back_home  > Button {
+  color:#9ccef9;
+}
+
+#selectFile{
+  font-size: 10px;
+  padding: 5px;
+  margin-left: 20px;
+  margin-top: 5px;
+  color:#9ccef9;
+}
+

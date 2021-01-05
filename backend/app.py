@@ -31,6 +31,10 @@ import cv2
 from numpy import asarray, save, load
 from flask_mysqldb import MySQL
 from datetime import timedelta
+import pydicom
+import scipy.misc
+import pandas as pd
+import imageio
 from flask_cors import CORS
 
 
@@ -49,19 +53,19 @@ app.config['MODEL_COVID'] = "model/svm_feature_resnet_v2.sav"
 app.config['IMAGE_SIZE'] = (224, 224)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-app.config['ALLOWED_EXTENSIONS'] = set(['png', 'jpg', 'jpeg'])
+app.config['ALLOWED_EXTENSIONS'] = set(['png', 'jpg', 'jpeg', 'dcm'])
 
 # Load model to extract feature
-# model = InceptionResNetV2(weights='imagenet', include_top=False)
-# extract_feature_model = Sequential()
-# extract_feature_model.add(model)
-# extract_feature_model.add(Flatten())
-# extract_feature_model.summary()
+model = InceptionResNetV2(weights='imagenet', include_top=False)
+extract_feature_model = Sequential()
+extract_feature_model.add(model)
+extract_feature_model.add(Flatten())
+extract_feature_model.summary()
     
 # Load model to predict
-# svm_covid_file = open(app.config['MODEL_COVID'], 'rb')
-# svm_covid_model = pickle.load(svm_covid_file)
-# svm_covid_file.close()
+svm_covid_file = open(app.config['MODEL_COVID'], 'rb')
+svm_covid_model = pickle.load(svm_covid_file)
+svm_covid_file.close()
 
 # Image input path
 image_input_paths = []
@@ -238,23 +242,43 @@ def processing_data(imagePaths):
     save('feature_dense_net.npy', features)
     return features
 
+def dcm2jpg(picture_path, head):
+    ds=pydicom.read_file(picture_path)
+    img=ds.pixel_array #extract image information
+    print(type(head))
+    head =''.join(head)
+    print(type(head))
+    image_path = os.path.join(app.config['UPLOAD_FOLDER'], head + '.jpg')
+    imageio.imwrite(image_path,img)
+    return image_path
+
 @app.route('/file-upload', methods=['POST'])
 def upload_file():
-    global image_input_paths
+    image_input_paths.clear()
     if 'file' not in request.files:
-       #print("info request file:",request.files)
+        print("info request file:",request.files)
         resp = jsonify({'message' : 'No file part in the request'})
         resp.status_code = 400
         return resp
     file_upload = request.files['file']
+    print("file_upload:", file_upload)
     if file_upload.filename == '':
         resp = jsonify({'message' : 'No file selected for uploading'})
-        resp.status_code = 400
+        resp.status_code = 400  
         return resp
     if file_upload and allowed_file(file_upload.filename):
         filename = secure_filename(file_upload.filename)
+        filename_array = filename.split(".")
+        tail = filename_array[len(filename_array)-1]
+        head = filename_array[0:len(filename_array)-1]
         image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file_upload.save(image_path)
+        print("head:", head)
+        if tail == 'dcm':
+            print("This is dcm file")
+            file_upload.save(image_path)
+            image_path = dcm2jpg(image_path, head)
+        else:
+            file_upload.save(image_path)
         image_input_paths.append(image_path)
         if len(image_input_paths) > 0:
             print(image_input_paths )

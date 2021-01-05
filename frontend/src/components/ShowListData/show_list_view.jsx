@@ -185,7 +185,7 @@ class ShowListData extends Component {
             </ul>
           </ul>
           <div className="info">
-            LIST OF PATIENTS AND THEIR X-RAYS
+            LIST OF PATIENTS AND X-RAYS
              </div>
           <div className="total_patients">
             <div className="row" className="hdr">
