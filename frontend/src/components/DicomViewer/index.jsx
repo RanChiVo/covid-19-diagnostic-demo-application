@@ -19,7 +19,6 @@ import Icon from '@material-ui/core/Icon';
 import SaveIcon from '@material-ui/icons/Save';
 import ArrowBackSharpIcon from '@material-ui/icons/ArrowBackSharp';
 import TuneSharpIcon from '@material-ui/icons/TuneSharp';
-import SearchSharpIcon from '@material-ui/icons/SearchSharp';
 import ZoomOutMapSharpIcon from '@material-ui/icons/ZoomOutMapSharp';
 import AllOutSharpIcon from '@material-ui/icons/AllOutSharp';
 import TimelineSharpIcon from '@material-ui/icons/TimelineSharp';
@@ -29,12 +28,13 @@ import Crop54SharpIcon from '@material-ui/icons/Crop54Sharp';
 import DetailsSharpIcon from '@material-ui/icons/DetailsSharp';
 import FeaturedVideoSharpIcon from '@material-ui/icons/FeaturedVideoSharp';
 import MaximizeSharpIcon from '@material-ui/icons/MaximizeSharp';
+import Loader from 'react-loader-spinner'
 
 class DicomViewer extends React.Component<{}, { isDicomImage: boolean }> {
 
   constructor(props) {
     super(props);
-    this.state = { isDicomImage: false, file_image:null };
+    this.state = { isDicomImage: false, file_image: null, is_detecting: 10, is_visible: true };
   }
   // component start mounting
   // just run only once time
@@ -229,7 +229,7 @@ class DicomViewer extends React.Component<{}, { isDicomImage: boolean }> {
 
       this.loadAndViewImage(imageId);
     }
-    const setSate = (e) =>{
+    const setSate = (e) => {
       this.setState({ file_image: e });
       console.log("state:", this.state.file_image)
     }
@@ -275,25 +275,31 @@ class DicomViewer extends React.Component<{}, { isDicomImage: boolean }> {
   handle_detect_click() {
     console.log("click detect", this.state.file_image);
     if (this.state.file_image) {
+      this.setState({ is_visible: false });
+      console.log("spinner:", this.state.is_detecting)
       let file = this.state.file_image.target.files[0];
       const formData = new FormData();
       console.log("image_path", file)
-      formData.append("file",file);
+      formData.append("file", file);
       console.log("image_path", file)
       const res = fetch("http://127.0.0.1:5000/file-upload", {
         method: "POST",
         body: formData
       }).then(res => res.json())
         .then(function (file) {
-          alert('Upload image successfully');
-          console.log(file);
+          console.log("result:", file);
+          document.getElementById('result').textContent = file["message"];
         })
         .catch(function (error) {
           console.log(error);
         });
     }
+    setTimeout(() => {
+      this.setState({ is_visible: true })
+    }, 500)
   }
   render() {
+    const is_visible = this.state.is_visible;
     return (
       <div className="show_image">
         <div className="back_home">
@@ -456,13 +462,14 @@ class DicomViewer extends React.Component<{}, { isDicomImage: boolean }> {
                 <span>Total Time: </span><span id="totalTime"></span><br />
                 <span>Load Time: </span><span id="loadTime"></span><br />
                 <span>Decode Time: </span><span id="decodeTime"></span><br />
+                <div id='result_dianologis'><span >Results Dianologis Machine: </span><span id="result"></span><br /></div>
               </div>
 
             </div>
             {/* Create a frame to display a dicom file. */}
             <div className="col-md-8">
               <div style={{
-                 width: '100hv',
+                width: '100hv',
                 height: '1000px', position: 'relative',
                 color: 'black', borderStyle: 'solid',
                 borderBottomColor: 'rgb(29, 153, 175)',
@@ -474,12 +481,19 @@ class DicomViewer extends React.Component<{}, { isDicomImage: boolean }> {
                 unselectable="on"
                 onMouseDown={() => false}
               >
-                <div id="dicomImage" style={{ width: '100hv', height: '1000px', top: '0px', left: '0px', position: 'relative' }}></div>
+                <div id="dicomImage" style={{ width: '100hv', height: '1000px', top: '0px', left: '0px', position: 'relative' }}>
+                <div id="spiner" hidden={is_visible}>
+                  <Loader
+                    type="Grid"
+                    color="#00BFFF"
+                    height={100}
+                    width={100}
+                  />
+                  </div>
+                </div>
               </div>
             </div>
-
           </div>
-
         </div>
       </div>
     );

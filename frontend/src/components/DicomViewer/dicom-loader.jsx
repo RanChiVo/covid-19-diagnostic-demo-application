@@ -13,7 +13,7 @@ const httpGetAsync = (theUrl, callback) => {
 };
 const dicomLoader = cs => {
   const image1PixelData = new Promise(resolve => {
-    httpGetAsync("assets/explicit_little.dcm", response => {
+    httpGetAsync("assets/a.dcm", response => {
       const data = new DataView(response);
       const image = daikon.Series.parseImage(data);
       const spacing = image.getPixelSpacing();

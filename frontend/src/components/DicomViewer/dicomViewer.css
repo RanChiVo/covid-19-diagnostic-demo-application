@@ -10,7 +10,7 @@
   color: #ffffff;
   margin-bottom: 5px;
   margin-left: 5px;
-
+  padding: 10px;
 }
 
 .feature_button{
@@ -46,3 +46,22 @@
   color:#9ccef9;
 }
 
+#result_dianologis{
+  font-size: 20px;
+  color: #d83586;
+}
+
+#dicomImage, #spiner{
+  position: absolute;
+}
+
+#dicomImage{
+  z-index: 1;
+  margin: auto;
+}
+
+#spiner{
+  z-index: 2;
+  margin-top: 25%;
+  margin-left: 25%;
+}

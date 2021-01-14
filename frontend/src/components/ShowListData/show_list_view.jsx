@@ -185,12 +185,12 @@ class ShowListData extends Component {
             </ul>
           </ul>
           <div className="info">
-            LIST OF PATIENTS AND X-RAYS
+            LIST OF PATIENTS AND X-RAYS IMAGES
              </div>
           <div className="total_patients">
             <div className="row" className="hdr">
               <div className="col-xl-12 title_total_patients">
-                STUDYLIST
+                PATIENT LIST
              </div>
             </div>
           </div>
@@ -207,6 +207,7 @@ class ShowListData extends Component {
                   filter={filterFactory()}
                   pagination={paginationFactory()} selectRow={selectRow}  rowEvents={this.handle_click_row} />
               </div>
+              
             </div>
           </div>
         </div>

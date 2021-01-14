@@ -252,6 +252,43 @@ def dcm2jpg(picture_path, head):
     imageio.imwrite(image_path,img)
     return image_path
 
+@app.route('/detect_result/<image_id>/<patient_id>', methods =['GET']) 
+def show_result(image_id, patient_id):
+    cursor = None
+    print("GET DATA")
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT * FROM Patient, Test WHERE Patient.id=Test.patient_id and Patient.id=%s', [patient_id])
+        data_list = cursor.fetchall()
+        print("patients",data_list)
+        output = [] 
+        print(data_list)
+        for data in data_list:    
+            print(data[1])
+            output.append({ 
+                'id': data[0], 
+                'fullname' : data[1],
+                'created_date' : data[2],
+                'gender' : data[3],
+                'date_of_birth' : data[4],
+                'address' : data[5],
+                'phone' : data[6],
+                'email' : data[7],
+                'quarantine_status' : data[8],
+                'test_time': data[11],
+                'result_time': data[10],
+                'result' : data[11],
+                'patient_id' : data[12]
+            }) 
+        print("output", output)
+        resp = jsonify({'patients': output}) 
+        return resp
+    except Exception as e:
+        print(e)
+    finally:
+        if cursor:
+            cursor.close()
+
 @app.route('/file-upload', methods=['POST'])
 def upload_file():
     image_input_paths.clear()
