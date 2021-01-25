@@ -6,7 +6,6 @@ import * as cornerstoneTools from "cornerstone-tools";
 import * as cornerstoneMath from "cornerstone-math";
 import * as cornerstoneWADOImageLoader from "cornerstone-wado-image-loader";
 import * as cornerstoneFileImageLoader from "cornerstone-file-image-loader";
-import * as cornerstoneWebImageLoader from "cornerstone-web-image-loader";
 import { uid } from 'react-uid';
 import dicomParser from "dicom-parser";
 import '/home/mot/Documents/version_control/demo_covid/frontend/src/components/DicomViewer/dicomViewer.css';
@@ -31,7 +30,7 @@ import FeaturedVideoSharpIcon from '@material-ui/icons/FeaturedVideoSharp';
 import MaximizeSharpIcon from '@material-ui/icons/MaximizeSharp';
 import Loader from 'react-loader-spinner'
 
-class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
+class DicomViewer extends React.Component<{}, { isDicomImage: boolean }> {
 
   constructor(props) {
     super(props);
@@ -48,7 +47,6 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
     cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
     cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
     cornerstoneFileImageLoader.external.cornerstone = cornerstone;
-    cornerstoneWebImageLoader.external.cornerstone = cornerstone
   }
 
   componentDidMount() {
@@ -57,20 +55,20 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
   }
 
   addFile = (file) => {
-     let isDicom = false;
-    // console.log("File load", file)
-    // let imageFormat = file.type.split("/")[1];
-    // if (imageFormat.localeCompare("dicom") == 0) {
-    //   isDicom = true;
-    //   imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
-     
-    // }
-    // else {
-    //   imageId = cornerstoneFileImageLoader.fileManager.add(file);
-    //   isDicom = false;
-    // }
+    let isDicom = false;
+    console.log("File load", file)
+    let imageFormat = file.type.split("/")[1];
+    let imageId = "";
+    if (imageFormat.localeCompare("dicom") == 0) {
+      isDicom = true;
+      imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
+    }
+    else {
+      imageId = cornerstoneFileImageLoader.fileManager.add(file);
+      isDicom = false;
+    }
     this.setState({ isDicomImage: isDicom });
-    return "df";
+    return imageId;
   }
 
   // this function gets called once the user drops the file onto the div
@@ -81,8 +79,6 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
     const files = evt.dataTransfer.files;
     console.log("File load hand select:", files)
     const imageId = this.addFile(files[0]);
-    console.log("image id get ittlklds:", imageId)
-
     console.log("isDicomImage:", this.state.isDicomImage)
     this.loadAndViewImage(imageId);
   }
@@ -119,12 +115,11 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
       });
     }
   }
-  
+
   //load image
   loaded = false;
   loadAndViewImage = (imageId) => {
-    imageId = "wadouri:http://localhost:3000/assets/b.dcm"
-    console.log("image_idnkdngkdkj", imageId)
+    console.log("image_id", imageId)
     const element = document.getElementById('dicomImage');
     const start = new Date().getTime();
     const loadedView = this.loaded;
@@ -218,34 +213,30 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
     cornerstone.events.addEventListener('cornerstoneimageloadprogress', function (event) {
       const eventData = event.detail;
       const loadProgress = document.getElementById('loadProgress');
-     // loadProgress.textContent = `Image Load Progress: ${eventData.percentComplete}%`;
+      loadProgress.textContent = `Image Load Progress: ${eventData.percentComplete}%`;
     });
   }
 
   resolveListenner = () => {
-    console.log("GET SOMETHING")
     const element = document.getElementById('dicomImage');
     cornerstone.enable(element);
-    this.loadAndViewImage("assets/a.dcm");
+    const update = (e) => {
+      let file = e.target.files[0];
+      console.log("event get image:", file)
 
-    // const update = (e) => {
-    //   let file = e.target.files[0];
-    //   console.log("event get image:", file)
+      const imageId = this.addFile(file);
+      console.log("isDicomImage:", this.state.isDicomImage)
 
-    //   const imageId = this.addFile(file);
-    //   console.log("Image id dgdfg", imageId)
-    //   console.log("isDicomImage:", this.state.isDicomImage)
-
-    //   this.loadAndViewImage(imageId);
-    // }
-    // const setSate = (e) => {
-    //   this.setState({ file_image: e });
-    //   console.log("state:", this.state.file_image)
-    // }
-    // document.getElementById('selectFile').addEventListener('change', function (e) {
-    //   setSate(e);
-    //   update(e);
-    // })
+      this.loadAndViewImage(imageId);
+    }
+    const setSate = (e) => {
+      this.setState({ file_image: e });
+      console.log("state:", this.state.file_image)
+    }
+    document.getElementById('selectFile').addEventListener('change', function (e) {
+      setSate(e);
+      update(e);
+    })
   }
 
   enableTool = (toolName, mouseButtonNumber) => {
@@ -278,6 +269,7 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
     history.push({
       pathname: `/`,
     })
+    window.location.reload();
   }
 
   handle_detect_click() {
@@ -295,7 +287,7 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
         body: formData
       }).then(res => res.json())
         .then(function (file) {
-          console.log("result:", file);
+          console.log("result:", file["message"]);
           document.getElementById('result').textContent = file["message"];
         })
         .catch(function (error) {
@@ -328,102 +320,113 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
           <Button onClick={() => {
             this.enableTool("wwwc", 1);
           }}
-            className="list_group_item"
+            className="list-group-item"
+            variant="outlined"
             color="primary"
             size="small"
             startIcon={<TuneSharpIcon />}
-            title="wwwc"
           >
+            wwwc
             </Button>
           <Button onClick={() => {
             this.enableTool("zoom", 5);
           }}
-            className="list_group_item"
+            className="list-group-item"
+            variant="outlined"
             color="primary"
             size="small"
             startIcon={<ZoomOutMapSharpIcon />}
-            title="Zoom"
           >
+            Zoom
             </Button>
           <Button
             onClick={() => {
               this.enableTool("pan", 3);
             }}
-            className="list_group_item"
+            className="list-group-item"
+            variant="outlined"
             color="primary"
             size="small"
             startIcon={<AllOutSharpIcon />}
-            title="Pan"
           >
+            Pan
           </Button>
           <Button onClick={() => {
             this.enableTool("length", 1);
           }}
-            className="list_group_item"
+            className="list-group-item"
+            variant="outlined"
             color="primary"
             size="small"
             startIcon={<MaximizeSharpIcon />}
-            title="Length"
           >
+            Length
             </Button>
           <Button onClick={() => {
             this.enableTool("probe", 1);
           }}
-            className="list_group_item"
+            className="list-group-item"
+            variant="outlined"
             color="primary"
             size="small"
             startIcon={<AdjustSharpIcon />}
           >
+            Probe
             </Button>
           <Button onClick={() => {
             this.enableTool("ellipticalRoi", 1);
           }}
-            className="list_group_item"
+            className="list-group-item"
+            variant="outlined"
             color="primary"
             size="small"
             startIcon={<RadioButtonUncheckedSharpIcon />}
-            title="Elliptical ROI"
           >
+            Elliptical ROI
             </Button>
           <Button onClick={() => {
             this.enableTool("rectangleRoi", 1);
           }}
-            className="list_group_item"
+            className="list-group-item"
+            variant="outlined"
             color="primary"
             size="small"
             startIcon={<Crop54SharpIcon />}
-            title="Rectangle ROI"
           >
+            Rectangle ROI
             </Button>
           <Button onClick={() => {
             this.enableTool("angle", 1);
           }}
-            className="list_group_item"
+            className="list-group-item"
+            variant="outlined"
             color="primary"
             size="small"
             startIcon={<DetailsSharpIcon />}
-            title="Angle"
           >
+            Angle
             </Button>
           <Button onClick={() => {
             this.enableTool("highlight", 1);
           }}
-            className="list_group_item"
+            className="list-group-item"
+            variant="outlined"
             color="primary"
             size="small"
             startIcon={<FeaturedVideoSharpIcon />}
-            title="Highlight"
           >
+            Highlight
             </Button>
           <Button onClick={() => {
             this.enableTool("freehand", 1);
           }}
-            className="list_group_item"
+            className="list-group-item"
+            variant="outlined"
             color="primary"
             size="small"
             startIcon={<TimelineSharpIcon />}
-            title="Freeform ROI"
           >
+            Freeform ROI
             </Button>
           <button className="detect_btn" onClick={() => this.handle_detect_click()}>DECTECT</button>
         </div>
@@ -500,4 +503,4 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
   }
 }
 
-export default DicomViewerTest;
+export default DicomViewer;

@@ -51,6 +51,7 @@ mysql = MySQL(app)
 
 app.config['MODEL_COVID'] = "model/svm_feature_resnet_v2.sav"
 app.config['IMAGE_SIZE'] = (224, 224)
+app.config['LOCAL_FOLDER'] = 'frontend/public/assets'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['ALLOWED_EXTENSIONS'] = set(['png', 'jpg', 'jpeg', 'dcm'])
@@ -308,15 +309,15 @@ def upload_file():
         filename_array = filename.split(".")
         tail = filename_array[len(filename_array)-1]
         head = filename_array[0:len(filename_array)-1]
-        image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        image_path_server = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        image_path_local = os.path.join(app.config['LOCAL_FOLDER'], filename)
+        file_upload.save(image_path_local)
+        file_upload.save(image_path_server)
         print("head:", head)
         if tail == 'dcm':
             print("This is dcm file")
-            file_upload.save(image_path)
-            image_path = dcm2jpg(image_path, head)
-        else:
-            file_upload.save(image_path)
-        image_input_paths.append(image_path)
+            image_path_server = dcm2jpg(image_path_server, head)
+        image_input_paths.append(image_path_server)
         if len(image_input_paths) > 0:
             print(image_input_paths )
             features_test = processing_data(image_input_paths)

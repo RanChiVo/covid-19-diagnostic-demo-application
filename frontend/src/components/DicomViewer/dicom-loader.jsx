@@ -36,22 +36,22 @@ const dicomLoader = cs => {
       });
     });
   });
-  function getExampleImage(imageId) {
+  function getExampleImage("assets/a.dcm") {
     const width = 256;
     const height = 256;
 
     function getPixelData() {
-      if (imageId === "example://1") {
+      if ("assets/a.dcm" === "example://1") {
         return image1PixelData;
       }
-      throw new Error("unknown imageId");
+      throw new Error("unknown "assets/a.dcm"");
     }
 
     return {
       promise: new Promise(resolve =>
         getPixelData().then(pixelData =>
           resolve({
-            imageId,
+            "assets/a.dcm",
             minPixelValue: 0,
             maxPixelValue: 257,
             slope: 1.0,

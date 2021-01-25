@@ -18,10 +18,7 @@
   background: rgb(9, 7, 7);
 }
 
-.feature_button .list-group-item {
-  margin: 5px;
-  padding: 8px;
-  font-size: 10px;
+.feature_button .list_group_item {
   color:#9ccef9;
 }
 

@@ -36,7 +36,7 @@ class ExamplePageBasic extends Component {
       { name: 'ZoomTouchPinch', mode: 'active' },
       { name: 'StackScrollMultiTouch', mode: 'active' },
     ],
-    imageIds: [
+    "assets/a.dcm"s: [
         "example://1",
     ],
   };
@@ -48,7 +48,7 @@ class ExamplePageBasic extends Component {
         <div style={{ display: 'flex', flexWrap: 'wrap' }}>
           <CornerstoneViewport
             tools={this.state.tools}
-            imageIds={this.state.imageIds}
+            "assets/a.dcm"s={this.state."assets/a.dcm"s}
             style={{ minWidth: '100%', height: '512px', flex: '1' }}
           />
         </div>
@@ -85,7 +85,7 @@ class ExamplePageBasic extends Component {
     { name: 'ZoomTouchPinch', mode: 'active' },
     { name: 'StackScrollMultiTouch', mode: 'active' },
   ],
-  imageIds: [
+  "assets/a.dcm"s: [
     'dicomweb://s3.amazonaws.com/lury/PTCTStudy/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.11.dcm',
     'dicomweb://s3.amazonaws.com/lury/PTCTStudy/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.12.dcm',
   ],
@@ -93,7 +93,7 @@ class ExamplePageBasic extends Component {
 {/* RENDER */}
 <CornerstoneViewport
   tools={this.state.tools}
-  imageIds={this.state.imageIds}
+  "assets/a.dcm"s={this.state."assets/a.dcm"s}
   style={{ minWidth: '100%', height: '512px', flex: '1' }}
 />`}
           </SyntaxHighlighter>

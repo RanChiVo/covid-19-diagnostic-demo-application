@@ -5,6 +5,9 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import '/home/mot/Documents/version_control/demo_covid/frontend/src/components/ShowListData/show_list_view.css';
 import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
 import axios from 'axios';
+import { Button } from 'semantic-ui-react'
+import AddPatientModal from '/home/mot/Documents/version_control/demo_covid/frontend/src/components/CreatePatient/modal'
+
 import {
   BrowserRouter as Router,
   Switch,
@@ -16,7 +19,6 @@ import {
   Redirect
 } from "react-router-dom";
 
-import DicomViewer from "../DicomViewer"
 class ShowListData extends Component {
 
   constructor(props) {
@@ -129,17 +131,15 @@ class ShowListData extends Component {
       pathname: `/images/${e.fullname}`,
       data: e.id // your data array of objects
     })
-    window.location.reload();
   }
 
   handle_click_row = {
     onClick: (e, row, rowIndex) => {
       const { history } = this.props;
-    history.push({
-      pathname: `/images/${row.fullname}`,
-      data: row.id // your data array of objects
-    })
-    window.location.reload();
+      history.push({
+        pathname: `/images/${row.fullname}`,
+        data: row.id // your data array of objects
+      })
     },
     onMouseEnter: (e, row, rowIndex) => {
       console.log(`enter on row with index: ${rowIndex}`);
@@ -192,11 +192,18 @@ class ShowListData extends Component {
               <div className="col-xl-12 title_total_patients">
                 PATIENT LIST
              </div>
+             <AddPatientModal trigger={<div className="createPatient">
+            <button className="ui labeled icon blue button create_Patient" style={{backgroundColor: 'rgb(81, 104, 115)', color: 'color: rgb(145, 185, 205)', bỏ
+            : 'solid #80bdff 0px'}}>
+              <i class="plus circle icon"></i>
+              Add Patient
+          </button>
+            </div>}>
+          </AddPatientModal>
             </div>
           </div>
           <div className="form_list">
             <div className="table_list_patient" >
-
               <div style={{ backgroundColor: '#151a1f' }}>
                 <BootstrapTable
                   striped
@@ -205,9 +212,8 @@ class ShowListData extends Component {
                   data={this.state.items}
                   columns={this.state.columns}
                   filter={filterFactory()}
-                  pagination={paginationFactory()} selectRow={selectRow}  rowEvents={this.handle_click_row} />
+                  pagination={paginationFactory()} selectRow={selectRow} rowEvents={this.handle_click_row} />
               </div>
-              
             </div>
           </div>
         </div>
