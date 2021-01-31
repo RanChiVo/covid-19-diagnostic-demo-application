@@ -26,11 +26,12 @@
 }
 
 .info {
+  margin: auto;
   color: rgb(145, 185, 205);
   background-color: #080d13;
   width: 100%;
   text-align: center;
-  padding: 30px;
+  padding: 10px;
 }
 
 table th,
@@ -104,6 +105,6 @@ ul {
 .createPatient {
   position:absolute;
   margin-top: -2%;
-  left: 80.5%;
+  left: 84%;
   cursor: pointer;
 }

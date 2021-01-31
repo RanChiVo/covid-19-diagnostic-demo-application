@@ -9,7 +9,7 @@ import * as cornerstoneFileImageLoader from "cornerstone-file-image-loader";
 import * as cornerstoneWebImageLoader from "cornerstone-web-image-loader";
 import { uid } from 'react-uid';
 import dicomParser from "dicom-parser";
-import '/home/mot/Documents/version_control/demo_covid/frontend/src/components/DicomViewer/dicomViewer.css';
+import '../DicomViewer/dicomViewer.css';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import Button from '@material-ui/core/Button';
 import { makeStyles } from '@material-ui/core/styles';
@@ -123,7 +123,7 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
   //load image
   loaded = false;
   loadAndViewImage = (imageId) => {
-    imageId = "wadouri:http://localhost:3000/assets/b.dcm"
+    imageId = "http://localhost:3000/assets/download.png"
     console.log("image_idnkdngkdkj", imageId)
     const element = document.getElementById('dicomImage');
     const start = new Date().getTime();
@@ -226,7 +226,7 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
     console.log("GET SOMETHING")
     const element = document.getElementById('dicomImage');
     cornerstone.enable(element);
-    this.loadAndViewImage("assets/a.dcm");
+    this.loadAndViewImage("assets/download.png");
 
     // const update = (e) => {
     //   let file = e.target.files[0];
@@ -306,6 +306,7 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
       this.setState({ is_visible: true })
     }, 500)
   }
+  
   render() {
     const is_visible = this.state.is_visible;
     return (

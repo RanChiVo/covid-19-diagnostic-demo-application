@@ -6,6 +6,8 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import ShowListData from './components/ShowListData/show_list_view'
 import ShowResultData from './components/Show_result_data/show_result_data'
 import 'semantic-ui-css/semantic.min.css'
+import AddPatientModal from "./components/CreatePatient/modal" 
+
   
 import {
   BrowserRouter as Router,

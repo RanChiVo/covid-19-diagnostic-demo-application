@@ -35,11 +35,12 @@ import pydicom
 import scipy.misc
 import pandas as pd
 import imageio
-from flask_cors import CORS
-
+from flask_cors import CORS, cross_origin
+from random import seed
+from random import randint
 
 app = Flask(__name__)
-CORS(app) 
+CORS(app, support_credentials=True)
 app.secret_key = "secret key"
 app.config['PERMANENT_SESSION_LIFETIME'] =  timedelta(minutes=10)
 app.config['MYSQL_HOST'] = '127.0.0.1'
@@ -51,17 +52,17 @@ mysql = MySQL(app)
 
 app.config['MODEL_COVID'] = "model/svm_feature_resnet_v2.sav"
 app.config['IMAGE_SIZE'] = (224, 224)
-app.config['LOCAL_FOLDER'] = 'frontend/public/assets'
+app.config['LOCAL_FOLDER'] = '/home/mot/Documents/version_control/demo_covid/frontend/public/assets'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['ALLOWED_EXTENSIONS'] = set(['png', 'jpg', 'jpeg', 'dcm'])
 
 # Load model to extract feature
-model = InceptionResNetV2(weights='imagenet', include_top=False)
+# model = InceptionResNetV2(weights='imagenet', include_top=False)
 extract_feature_model = Sequential()
-extract_feature_model.add(model)
-extract_feature_model.add(Flatten())
-extract_feature_model.summary()
+# extract_feature_model.add(model)
+# extract_feature_model.add(Flatten())
+# extract_feature_model.summary()
     
 # Load model to predict
 svm_covid_file = open(app.config['MODEL_COVID'], 'rb')
@@ -94,7 +95,6 @@ def get_all_patients():
                 'email' : patient[7],
                 'quarantine_status' : patient[8],
             }) 
-        print("output", output)
         resp = jsonify({'patients': output}) 
         return resp
     except Exception as e:
@@ -202,7 +202,6 @@ def login():
                     return resp
         else:
             resp = jsonify({'message' : 'Bad Request - invalid credendtials'})
-            resp.status_code = 400
             return resp
 
     except Exception as e:
@@ -217,15 +216,6 @@ def logout():
 		session.pop('username', None)
 	return jsonify({'message' : 'You successfully logged out'})
 
-@app.route('/info', methods=['GET'])
-def info():
-    result = [
-        {
-            "Player":"MannyB!",
-            "Decription":"Testing and APi",
-        }
-    ]
-    return jsonify(result)
 
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
@@ -313,28 +303,87 @@ def upload_file():
         image_path_local = os.path.join(app.config['LOCAL_FOLDER'], filename)
         file_upload.save(image_path_local)
         file_upload.save(image_path_server)
+        resp = jsonify({'message' :  image_path_local   })
+        resp.status_code = 201
+        return resp
         print("head:", head)
-        if tail == 'dcm':
-            print("This is dcm file")
-            image_path_server = dcm2jpg(image_path_server, head)
-        image_input_paths.append(image_path_server)
-        if len(image_input_paths) > 0:
-            print(image_input_paths )
-            features_test = processing_data(image_input_paths)
-            sc_x = StandardScaler()
-            testX = sc_x.fit_transform(features_test)
-            y_pred = svm_covid_model.predict(testX)
-            labelDict = {0:"NORMAL", 1:"COVID-19", 2:"PNEUMONIA"}
-            print("type y_pred:", type(y_pred))
-            result = labelDict[y_pred[0]]
-            print("type result:", type(result))
-            resp = jsonify({'message' : result})
-            resp.status_code = 201
-            return resp
+        # if tail == 'dcm':
+        #     print("This is dcm file")
+        #     image_path_server = dcm2jpg(image_path_server, head)
+        # image_input_paths.append(image_path_server)
+        # if len(image_input_paths) > 0:
+        #     print(image_input_paths )
+        #     features_test = processing_data(image_input_paths)
+        #     sc_x = StandardScaler()
+        #     testX = sc_x.fit_transform(features_test)
+        #     y_pred = svm_covid_model.predict(testX)
+        #     labelDict = {0:"NORMAL", 1:"COVID-19", 2:"PNEUMONIA"}
+        #     print("type y_pred:", type(y_pred))
+        #     result = labelDict[y_pred[0]]
+        #     print("type result:", type(result))
+        #     resp = jsonify({'message' : result})
+        #     resp.status_code = 201
+        #     return resp
     else:
         resp = jsonify({'message' : 'Allowed file types are txt, pdf, png, jpg, jpeg, gif'})
         resp.status_code = 400
         return resp
+
+@app.route('/add_patient',  methods=['POST', 'GET', 'OPTIONS'])
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
+def add_patient():
+    cursor = None
+    print("CREATE NEW PATIENT")
+    try:
+        fullname = request.form['fullname'] 
+        print("full_name:", fullname)
+        created_date = request.form['created_date']
+        print("created_date:", created_date)
+        gender = request.form["gender"]
+        print("gender:", gender)
+        date_of_birth = request.form["date_of_birth"]
+        print("date_of_birth:", date_of_birth)
+        address = request.form["address"]
+        print("address:", address)
+        phone = request.form["phone"]
+        print("phone:", phone)
+        email = request.form["email"]
+        print("email:", email)
+        quarantine_status = request.form["quarantine_status"]
+        print("quarantine_status:", quarantine_status)
+        url = request.form['url'] 
+        print("url:", url)
+        diagnostis_result = ""
+        size_image = ""
+        # validate the received values
+        if request.method == 'POST':
+            cursor = mysql.connection.cursor()
+            cursor.execute("SELECT COUNT(Patient.id) from Patient")
+            total_patient =  cursor.fetchone()[0]
+            id_patient = total_patient + 1
+            value = randint(0, 10)
+            id_patient = str(id_patient)+ str(value) + fullname
+            print("total patient:", total_patient)
+            # sql = "INSERT INTO Patient(id, fullname, created_date, gender, date_of_birth, address, phone, email, quarantine_status) VALUES(%s,  %s, %s, %s, %s, %s, %s, %s, %s)"
+            # fields = ( id_patient, fullname, created_date, gender, date_of_birth, address, phone, email, quarantine_status)
+            # cursor.execute(sql, fields)
+            sql = "INSERT INTO Image(url, uploaded_date, diagnostis_result,size_image, patient_id) VALUES(%s,  %s, %s, %s,%s)"
+            fields = (url, created_date, diagnostis_result, size_image, id_patient) 
+            cursor.execute(sql, fields)
+            mysql.connection.commit()
+            resp = jsonify({'message' : 'Patientz added successfully!'})
+            resp.status_code = 200
+            return resp
+        else:
+            resp = jsonify({'message' : 'Bad Request - invalid credendtials'})
+            resp.status_code = 400
+            return resp
+
+    except Exception as e:
+        print(e)
+    finally:
+        if cursor:
+            cursor.close()
 
 app.config["DEBUG"] = True
 app.run()

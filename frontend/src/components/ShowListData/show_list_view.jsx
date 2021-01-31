@@ -2,21 +2,15 @@
 import React, { Component } from 'react';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import BootstrapTable from 'react-bootstrap-table-next';
-import '/home/mot/Documents/version_control/demo_covid/frontend/src/components/ShowListData/show_list_view.css';
+import "../ShowListData/show_list_view.css";
 import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
 import axios from 'axios';
 import { Button } from 'semantic-ui-react'
-import AddPatientModal from '/home/mot/Documents/version_control/demo_covid/frontend/src/components/CreatePatient/modal'
-
+import AddPatientModal from "../CreatePatient/modal" 
+import Header from "../ShowListData/header"
 import {
   BrowserRouter as Router,
-  Switch,
-  Route,
   withRouter,
-  Link,
-  useRouteMatch,
-  useParams,
-  Redirect
 } from "react-router-dom";
 
 class ShowListData extends Component {
@@ -185,7 +179,8 @@ class ShowListData extends Component {
             </ul>
           </ul>
           <div className="info">
-            LIST OF PATIENTS AND X-RAYS IMAGES
+          <Header></Header>
+            LIST OF PATIENTS AND LUNG X-RAYS IMAGES
              </div>
           <div className="total_patients">
             <div className="row" className="hdr">

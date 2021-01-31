@@ -1,0 +1,44 @@
+.ui.modal {
+    position: fixed;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    height: auto !important;
+}
+
+.ui.modal>.header{
+    background-color: #097ff5;
+}
+
+.ui.input>input{
+    background-color: #097ff5;
+}
+
+.ui.modal > .image.content {
+    background-color: rgb(81, 104, 115);
+    color: white;
+    font-size: 16px;
+}
+
+.ui.input {
+    width: 100%;
+    background-color: #151a1f;
+}
+
+.contentA ,.contentB, .contentC, .contentD, .contentE {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+
+.contentA >div, .contentB >div, .contentC>div, .contentD>div,  .contentE>div{
+    margin: 15px;
+    width: 100%;
+}
+
+#selectFile{
+    margin: 15px;
+    width: 100%;
+  font-size: 15px;
+}

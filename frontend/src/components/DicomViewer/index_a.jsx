@@ -8,7 +8,7 @@ import * as cornerstoneWADOImageLoader from "cornerstone-wado-image-loader";
 import * as cornerstoneFileImageLoader from "cornerstone-file-image-loader";
 import { uid } from 'react-uid';
 import dicomParser from "dicom-parser";
-import '/home/mot/Documents/version_control/demo_covid/frontend/src/components/DicomViewer/dicomViewer.css';
+import "./dicom-loader.css"
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import Button from '@material-ui/core/Button';
 import { makeStyles } from '@material-ui/core/styles';
