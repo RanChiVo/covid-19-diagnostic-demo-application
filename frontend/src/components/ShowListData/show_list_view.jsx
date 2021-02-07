@@ -116,27 +116,30 @@ class ShowListData extends Component {
     });
   }
 
-  onItemClick(e) {
-    // let string_patient = e.id;
-    // alert("You have pressed this row: id patient:"+ string_patient.toString())
-    // this.setState({ redirect: "/images"});
-    const { history } = this.props;
-    history.push({
-      pathname: `/images/${e.fullname}`,
-      data: e.id // your data array of objects
-    })
-  }
-
+  
   handle_click_row = {
     onClick: (e, row, rowIndex) => {
       const { history } = this.props;
+      let patientInfo = {};
+      const patientList = this.state.items;
+      console.log("PATIENT", patientList);
+      for (var item in patientList){
+        console.log("item id", );
+        if(patientList[item]["id"]===row.id){
+          patientInfo = patientList[item];
+          break;
+        }
+      }
       history.push({
         pathname: `/images/${row.fullname}`,
-        data: row.id // your data array of objects
+        data: patientInfo // your data array of objects
       })
+      
+      console.log(`enter on row with index: ${rowIndex}`);
+      console.log("value of row", row.phone)
+      
     },
     onMouseEnter: (e, row, rowIndex) => {
-      console.log(`enter on row with index: ${rowIndex}`);
     }
   }
 
@@ -147,7 +150,7 @@ class ShowListData extends Component {
       page: 2,
       sizePerPageList: [{
         text: '5', value: 2
-      }, {
+      }, {  
         text: '10', value: 2
       }, {
         text: 'All', value: this.state.items.length
@@ -168,16 +171,7 @@ class ShowListData extends Component {
       return <div>Loading...</div>;
     } else {
       return (
-        <div className="list_patients">
-          <ul>
-            <ul>
-              {/* {this.state.items.map(item => (
-            <li key={item.id} onClick={() => this.onItemClick(item)}>
-              {item.fullname} {item.gender} {item.address} {item.quarantine_status} {item.email} {item.date_of_birth}{item.created_date} 
-            </li>
-          ))}    */}
-            </ul>
-          </ul>
+        <div className="list_patients" style={{background: 'rgb(81, 104, 115)'}}>
           <div className="info">
           <Header></Header>
             LIST OF PATIENTS AND LUNG X-RAYS IMAGES

@@ -29,10 +29,16 @@
 
 .info_image {
   color: white;
+  overflow-y: scroll;
+  height: 1000px;
+  margin-left: 10px;
 }
 
 .back_home  > Button {
   color:#9ccef9;
+  font-size: 13px;
+  margin-top: 5px;
+  margin-left: 15px;
 }
 
 #selectFile{
@@ -61,4 +67,9 @@
   z-index: 2;
   margin-top: 25%;
   margin-left: 25%;
+}
+
+h4{
+  color:#9ccef9;
+  margin: 0px;
 }

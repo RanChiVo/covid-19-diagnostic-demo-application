@@ -232,7 +232,16 @@ class AddPatientModal extends React.Component {
         var form = new FormData();
         form.append("file", this.state.selectedFile);
         console.log("selectedFile", this.state.selectedFile);
-            
+        const nameFile = this.state.selectedFile['name'];
+        const fullname = this.state.fullname;
+        const created_date = this.state.created_date;
+        const gender = this.state.gender;
+        const date_of_birth = this.state.date_of_birth;
+        const address = this.state.address;
+        const phone = this.state.phone;
+        const email = this.state.email;
+        const quarantine_status = this.state.quarantine_status;
+
         axios.post("http://127.0.0.1:5000/file-upload", form, { processData: false },
             { contentType: false }, {
 
@@ -242,60 +251,61 @@ class AddPatientModal extends React.Component {
         })
             .then(function (response) {
                 //handle success
+                console.log("SUCCESSFUL", nameFile)
                 console.log("response", response['data']['message']);
-                this.setState({url:response['data']['message']})
+                var formData = new FormData();
+                formData.append("url","assets/"+ nameFile);
+                console.log("url", "assets/"+ nameFile);
+        
+                formData.append("fullname",fullname );
+                console.log("fullname", fullname);
+        
+                formData.append("created_date", created_date);
+                console.log("created_date", created_date);
+        
+                formData.append("gender", gender);
+                console.log("gender", gender);
+        
+                formData.append("date_of_birth", date_of_birth);
+                console.log("date_of_birth", date_of_birth);
+        
+                formData.append("address", address);
+                console.log("address", address);
+        
+                formData.append("phone", phone);
+                console.log("phone", phone);
+        
+                formData.append("email", email);      
+                console.log("email", email);
+        
+                formData.append("quarantine_status", quarantine_status);
+                console.log("quarantine_status", quarantine_status);
+        
+              
+                const url = "http://127.0.0.1:5000/add_patient";
+        
+                axios.post(url, formData, { processData: false },
+                    { contentType: false }, {
+        
+                    headers: new Headers({
+                        'Access-Control-Allow-Origin': '*'
+                    })
+                })
+                    .then(function (response) {
+                        //handle success
+                        console.log(response);
+                    })
+                    .catch(function (response) {
+                        //handle error
+                        console.log(response);
+                    });
             })
             .catch(function (response) {
                 //handle error
                 console.log(response);
             });
 
-        var formData = new FormData();
-        formData.append("url","assets/"+ this.state.selectedFile['name']);
-        console.log("url", "assets/"+ this.state.selectedFile['name']);
-
-        formData.append("fullname", this.state.fullname);
-        console.log("fullname", this.state.fullname);
-
-        formData.append("created_date", this.state.created_date);
-        console.log("created_date", this.state.created_date);
-
-        formData.append("gender", this.state.gender);
-        console.log("gender", this.state.gender);
-
-        formData.append("date_of_birth", this.state.date_of_birth);
-        console.log("date_of_birth", this.state.date_of_birth);
-
-        formData.append("address", this.state.address);
-        console.log("address", this.state.address);
-
-        formData.append("phone", this.state.phone);
-        console.log("phone", this.state.phone);
-
-        formData.append("email", this.state.email);
-        console.log("email", this.state.email);
-
-        formData.append("quarantine_status", this.state.quarantine_status);
-        console.log("quarantine_status", this.state.quarantine_status);
-
-      
-        const url = "http://127.0.0.1:5000/add_patient";
-
-        axios.post(url, formData, { processData: false },
-            { contentType: false }, {
-
-            headers: new Headers({
-                'Access-Control-Allow-Origin': '*'
-            })
-        })
-            .then(function (response) {
-                //handle success
-                console.log(response);
-            })
-            .catch(function (response) {
-                //handle error
-                console.log(response);
-            });
+       
     }
 
     updateSelectedFile = (_e) => {

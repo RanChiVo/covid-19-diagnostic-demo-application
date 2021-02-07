@@ -486,12 +486,12 @@ class DicomViewer extends React.Component<{}, { isDicomImage: boolean }> {
               >
                 <div id="dicomImage" style={{ width: '100hv', height: '1000px', top: '0px', left: '0px', position: 'relative' }}>
                   <div id="spiner" hidden={is_visible}>
-                    <Loader
-                      type="Grid"
+                    {/* <Loader
+                      type="TailSpin"
                       color="#00BFFF"
                       height={100}
                       width={100}
-                    />
+                    /> */}
                   </div>
                 </div>
               </div>

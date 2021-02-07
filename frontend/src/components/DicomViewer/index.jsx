@@ -10,14 +10,7 @@ import * as cornerstoneWebImageLoader from "cornerstone-web-image-loader";
 import { uid } from 'react-uid';
 import dicomParser from "dicom-parser";
 import '../DicomViewer/dicomViewer.css';
-import ButtonGroup from '@material-ui/core/ButtonGroup';
 import Button from '@material-ui/core/Button';
-import { makeStyles } from '@material-ui/core/styles';
-import DeleteIcon from '@material-ui/icons/Delete';
-import CloudUploadIcon from '@material-ui/icons/CloudUpload';
-import KeyboardVoiceIcon from '@material-ui/icons/KeyboardVoice';
-import Icon from '@material-ui/core/Icon';
-import SaveIcon from '@material-ui/icons/Save';
 import ArrowBackSharpIcon from '@material-ui/icons/ArrowBackSharp';
 import TuneSharpIcon from '@material-ui/icons/TuneSharp';
 import ZoomOutMapSharpIcon from '@material-ui/icons/ZoomOutMapSharp';
@@ -30,12 +23,20 @@ import DetailsSharpIcon from '@material-ui/icons/DetailsSharp';
 import FeaturedVideoSharpIcon from '@material-ui/icons/FeaturedVideoSharp';
 import MaximizeSharpIcon from '@material-ui/icons/MaximizeSharp';
 import Loader from 'react-loader-spinner'
+import axios from 'axios';
 
-class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
+
+class DicomViewerTest extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = { isDicomImage: false, file_image: null, is_detecting: 10, is_visible: true };
+    console.log("props:", props.location.data);
+
+    this.state = {
+      isDicomImage: false, file_image: null, is_detecting: 10, is_visible: true,
+      infoPatient: props.location.data, infoPatientImages: {}
+    };
+    this.handle_detect_click = this.handle_detect_click.bind(this);
   }
   // component start mounting
   // just run only once time
@@ -54,16 +55,17 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
   componentDidMount() {
     this.setupListenner();
     this.resolveListenner();
+    // console.log("get data from route", this.props.location.state.data);
   }
 
   addFile = (file) => {
-     let isDicom = false;
+    let isDicom = false;
     // console.log("File load", file)
     // let imageFormat = file.type.split("/")[1];
     // if (imageFormat.localeCompare("dicom") == 0) {
     //   isDicom = true;
     //   imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
-     
+
     // }
     // else {
     //   imageId = cornerstoneFileImageLoader.fileManager.add(file);
@@ -82,9 +84,8 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
     console.log("File load hand select:", files)
     const imageId = this.addFile(files[0]);
     console.log("image id get ittlklds:", imageId)
-
     console.log("isDicomImage:", this.state.isDicomImage)
-    this.loadAndViewImage(imageId);
+    this.loadAndViewImage(imageId, this.state.isDicomImage);
   }
 
   // This fuction gets a image by drag
@@ -119,16 +120,14 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
       });
     }
   }
-  
+
   //load image
   loaded = false;
-  loadAndViewImage = (imageId) => {
-    imageId = "http://localhost:3000/assets/download.png"
+  loadAndViewImage = (imageId, isDicom) => {
     console.log("image_idnkdngkdkj", imageId)
     const element = document.getElementById('dicomImage');
     const start = new Date().getTime();
     const loadedView = this.loaded;
-    const isDicom = this.state.isDicomImage;
     const config = {
       invert: true,
       minScale: 0.25,
@@ -218,16 +217,34 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
     cornerstone.events.addEventListener('cornerstoneimageloadprogress', function (event) {
       const eventData = event.detail;
       const loadProgress = document.getElementById('loadProgress');
-     // loadProgress.textContent = `Image Load Progress: ${eventData.percentComplete}%`;
+      // loadProgress.textContent = `Image Load Progress: ${eventData.percentComplete}%`;
     });
   }
 
   resolveListenner = () => {
     console.log("GET SOMETHING")
     const element = document.getElementById('dicomImage');
-    cornerstone.enable(element);
-    this.loadAndViewImage("assets/download.png");
+    let imageId = "wadouri:http://localhost:3000/assets/b.dcm";
+    let isDicom = false;
 
+    cornerstone.enable(element);
+    if (this.state.infoPatient != undefined || this.state.infoPatient != null) {
+      let url = this.state.infoPatient.url;
+      let imageFormat = url.split(".")[1];
+      console.log("imageFormat", imageFormat);
+
+      if (imageFormat.localeCompare("dcm") == 0) {
+        isDicom = true;
+        imageId = "wadouri:http://localhost:3000/" + url;
+      }
+      else {
+        isDicom = false;
+        imageId = "http://localhost:3000/" + url;
+      }
+    }
+
+    console.log("isDicom", isDicom);
+    this.loadAndViewImage(imageId, isDicom);
     // const update = (e) => {
     //   let file = e.target.files[0];
     //   console.log("event get image:", file)
@@ -281,34 +298,43 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
   }
 
   handle_detect_click() {
-    console.log("click detect", this.state.file_image);
-    if (this.state.file_image) {
+
+    if (this.state.infoPatient.url) {
+      console.log("START");
+      const { history } = this.props;
+
       this.setState({ is_visible: false });
       console.log("spinner:", this.state.is_detecting)
-      let file = this.state.file_image.target.files[0];
+      let url = this.state.infoPatient.url;
+      let id = this.state.infoPatient.id;
       const formData = new FormData();
-      console.log("image_path", file)
-      formData.append("file", file);
-      console.log("image_path", file)
-      const res = fetch("http://127.0.0.1:5000/file-upload", {
+      console.log("url", url)
+      formData.append("url", url);
+      let infoPatientResult = this.state.infoPatient;
+    
+      fetch("http://127.0.0.1:5000/predict", {
         method: "POST",
         body: formData
       }).then(res => res.json())
-        .then(function (file) {
-          console.log("result:", file);
-          document.getElementById('result').textContent = file["message"];
+      .then(function (file) {
+        infoPatientResult["diagnostis_result"]=file["message"];
+        history.push({
+          pathname: `/result/${id}`,
+          data: infoPatientResult
         })
-        .catch(function (error) {
-          console.log(error);
-        });
-    }
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
     setTimeout(() => {
-      this.setState({ is_visible: true })
-    }, 500)
+          this.setState({ is_visible: true })
+        }, 1500);
+    }
   }
-  
+
   render() {
     const is_visible = this.state.is_visible;
+    const { error, isLoaded, items } = this.state;
     return (
       <div className="show_image">
         <div className="back_home">
@@ -335,7 +361,7 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
             startIcon={<TuneSharpIcon />}
             title="wwwc"
           >
-            </Button>
+          </Button>
           <Button onClick={() => {
             this.enableTool("zoom", 5);
           }}
@@ -345,7 +371,7 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
             startIcon={<ZoomOutMapSharpIcon />}
             title="Zoom"
           >
-            </Button>
+          </Button>
           <Button
             onClick={() => {
               this.enableTool("pan", 3);
@@ -366,7 +392,7 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
             startIcon={<MaximizeSharpIcon />}
             title="Length"
           >
-            </Button>
+          </Button>
           <Button onClick={() => {
             this.enableTool("probe", 1);
           }}
@@ -375,7 +401,7 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
             size="small"
             startIcon={<AdjustSharpIcon />}
           >
-            </Button>
+          </Button>
           <Button onClick={() => {
             this.enableTool("ellipticalRoi", 1);
           }}
@@ -385,7 +411,7 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
             startIcon={<RadioButtonUncheckedSharpIcon />}
             title="Elliptical ROI"
           >
-            </Button>
+          </Button>
           <Button onClick={() => {
             this.enableTool("rectangleRoi", 1);
           }}
@@ -395,7 +421,7 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
             startIcon={<Crop54SharpIcon />}
             title="Rectangle ROI"
           >
-            </Button>
+          </Button>
           <Button onClick={() => {
             this.enableTool("angle", 1);
           }}
@@ -405,7 +431,7 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
             startIcon={<DetailsSharpIcon />}
             title="Angle"
           >
-            </Button>
+          </Button>
           <Button onClick={() => {
             this.enableTool("highlight", 1);
           }}
@@ -415,7 +441,7 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
             startIcon={<FeaturedVideoSharpIcon />}
             title="Highlight"
           >
-            </Button>
+          </Button>
           <Button onClick={() => {
             this.enableTool("freehand", 1);
           }}
@@ -425,8 +451,8 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
             startIcon={<TimelineSharpIcon />}
             title="Freeform ROI"
           >
-            </Button>
-          <button className="detect_btn" onClick={() => this.handle_detect_click()}>DECTECT</button>
+          </Button>
+          <button className="detect_btn" onClick={() => this.handle_detect_click()} >Detect COVID-19</button>
         </div>
         <div className="layout_display">
           <div className="page-header">
@@ -437,35 +463,50 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
               {/* Create a position to show info of dicom file */}
               <div className="info_image  ">
                 <ul>
-                <li><span>Transfer Syntax: </span><span id="transferSyntax"></span><br /></li>
-                <li><span>SOP Class: </span><span id="sopClass"></span><br /></li>
-                <li><span>Samples Per Pixel: </span><span id="samplesPerPixel"></span><br /></li>
-                <li><span>Photometric Interpretation: </span><span id="photometricInterpretation"></span><br /></li>
-                <li><span>Number Of Frames: </span><span id="numberOfFrames"></span><br /></li>
-                <li><span>Planar Configuration: </span><span id="planarConfiguration"></span><br /></li>
-                <li><span>Rows: </span><span id="rows"></span><br /></li>
-                <li><span>Columns: </span><span id="columns"></span><br /></li>
-                <li><span>Pixel Spacing: </span><span id="pixelSpacing"></span><br /></li>
-                <li><span>Bits Allocated: </span><span id="bitsAllocated"></span><br /></li>
-                <li><span>Bits Stored: </span><span id="bitsStored"></span><br /></li>
-                <li><span>High Bit: </span><span id="highBit"></span><br /></li>
-                <li><span>Pixel Representation: </span><span id="pixelRepresentation"></span><br /></li>
-                <li><span>WindowCenter: </span><span id="windowCenter"></span><br /></li>
-                <li><span>WindowWidth: </span><span id="windowWidth"></span><br /></li>
-                <li><span>RescaleIntercept: </span><span id="rescaleIntercept"></span><br /></li>
-                <li><span>RescaleSlope: </span><span id="rescaleSlope"></span><br /></li>
-                <li><span>Basic Offset Table Entries: </span><span id="basicOffsetTable"></span><br /></li>
-                <li><span>Fragments: </span><span id="fragments"></span><br /></li>
-                <li><span>Min Stored Pixel Value: </span><span id="minStoredPixelValue"></span><br /></li>
-                <li><span>Max Stored Pixel Value: </span><span id="maxStoredPixelValue"></span><br /></li>
-                <li><span>Total Time: </span><span id="totalTime"></span><br /></li>
-                <li><span>Load Time: </span><span id="loadTime"></span><br /></li>
-                <li><span>Decode Time: </span><span id="decodeTime"></span><br /></li>
-                <li> <div id='result_dianologis'><span >Results Dianologis Machine: </span><span id="result"></span><br /></div></li>
-           </ul>
+                  <li><h4>Patient information</h4></li>
 
+                  <li><span>Id: </span><span id="fullname">{this.state.infoPatient && this.state.infoPatient.id}</span><br /></li>
+                  <li><span>Fullname Patient: </span><span id="fullname">{this.state.infoPatient && this.state.infoPatient.fullname}</span><br /></li>
+                  <li><span>Created date: </span><span id="created_date">{this.state.infoPatient && this.state.infoPatient.created_date}</span><br /></li>
+                  <li><span>Gender: </span><span id="gender">{this.state.infoPatient && this.state.infoPatient.gender}</span><br /></li>
+                  <li><span>Date of birth: </span><span id="date_of_birth">{this.state.infoPatient && this.state.infoPatient.date_of_birth}</span><br /></li>
+                  <li><span>Adress: </span><span id="address">{this.state.infoPatient && this.state.infoPatient.address}</span><br /></li>
+                  <li><span>Phone: </span><span id="phone">{this.state.infoPatient && this.state.infoPatient.phone}</span><br /></li>
+                  <li><span>Email: </span><span id="email">{this.state.infoPatient && this.state.infoPatient.email}</span><br /></li>
+                  <li><h4>Image information</h4></li>
+                  <li><span>Quarantine status: </span><span id="quarantine_status">{this.state.infoPatient && this.state.infoPatient.quarantine_status}</span><br /></li>
+                  <li><span>Image id: </span><span id="id_image">{this.state.infoPatient && this.state.infoPatient.id_image}</span><br /></li>
+                  <li><span>url: </span><span id="url">{this.state.infoPatient && this.state.infoPatient.url}</span><br /></li>
+                  <li><span>Uploaded date: </span><span id="uploaded_date">{this.state.infoPatient && this.state.infoPatient.uploaded_date}</span><br /></li>
+                  <li><span>Diagnostis result: </span><span id="diagnostis_result">{this.state.infoPatient && this.state.infoPatient.diagnostis_result}</span><br /></li>
+                  <li><h4>Dicom image information</h4></li>
+                  <li><span>Transfer Syntax: </span><span id="transferSyntax"></span><br /></li>
+                  <li><span>SOP Class: </span><span id="sopClass"></span><br /></li>
+                  <li><span>Samples Per Pixel: </span><span id="samplesPerPixel"></span><br /></li>
+                  <li><span>Photometric Interpretation: </span><span id="photometricInterpretation"></span><br /></li>
+                  <li><span>Number Of Frames: </span><span id="numberOfFrames"></span><br /></li>
+                  <li><span>Planar Configuration: </span><span id="planarConfiguration"></span><br /></li>
+                  <li><span>Rows: </span><span id="rows"></span><br /></li>
+                  <li><span>Columns: </span><span id="columns"></span><br /></li>
+                  <li><span>Pixel Spacing: </span><span id="pixelSpacing"></span><br /></li>
+                  <li><span>Bits Allocated: </span><span id="bitsAllocated"></span><br /></li>
+                  <li><span>Bits Stored: </span><span id="bitsStored"></span><br /></li>
+                  <li><span>High Bit: </span><span id="highBit"></span><br /></li>
+                  <li><span>Pixel Representation: </span><span id="pixelRepresentation"></span><br /></li>
+                  <li><span>WindowCenter: </span><span id="windowCenter"></span><br /></li>
+                  <li><span>WindowWidth: </span><span id="windowWidth"></span><br /></li>
+                  <li><span>RescaleIntercept: </span><span id="rescaleIntercept"></span><br /></li>
+                  <li><span>RescaleSlope: </span><span id="rescaleSlope"></span><br /></li>
+                  <li><span>Basic Offset Table Entries: </span><span id="basicOffsetTable"></span><br /></li>
+                  <li><span>Fragments: </span><span id="fragments"></span><br /></li>
+                  <li><span>Min Stored Pixel Value: </span><span id="minStoredPixelValue"></span><br /></li>
+                  <li><span>Max Stored Pixel Value: </span><span id="maxStoredPixelValue"></span><br /></li>
+                  <li><span>Total Time: </span><span id="totalTime"></span><br /></li>
+                  <li><span>Load Time: </span><span id="loadTime"></span><br /></li>
+                  <li><span>Decode Time: </span><span id="decodeTime"></span><br /></li>
+                  <li> <div id='result_dianologis'><span >Results Dianologis Machine: </span><span id="result"></span><br /></div></li>
+                </ul>
               </div>
-                
             </div>
             {/* Create a frame to display a dicom file. */}
             <div className="col-md-8">
@@ -485,7 +526,7 @@ class DicomViewerTest extends React.Component<{}, { isDicomImage: boolean }> {
                 <div id="dicomImage" style={{ width: '100hv', height: '1000px', top: '0px', left: '0px', position: 'relative' }}>
                   <div id="spiner" hidden={is_visible}>
                     <Loader
-                      type="Grid"
+                      type="Circles"
                       color="#00BFFF"
                       height={100}
                       width={100}

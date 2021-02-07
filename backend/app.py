@@ -32,6 +32,7 @@ from numpy import asarray, save, load
 from flask_mysqldb import MySQL
 from datetime import timedelta
 import pydicom
+from pydicom.data import get_testdata_file
 import scipy.misc
 import pandas as pd
 import imageio
@@ -53,16 +54,15 @@ mysql = MySQL(app)
 app.config['MODEL_COVID'] = "model/svm_feature_resnet_v2.sav"
 app.config['IMAGE_SIZE'] = (224, 224)
 app.config['LOCAL_FOLDER'] = '/home/mot/Documents/version_control/demo_covid/frontend/public/assets'
-app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['ALLOWED_EXTENSIONS'] = set(['png', 'jpg', 'jpeg', 'dcm'])
 
 # Load model to extract feature
-# model = InceptionResNetV2(weights='imagenet', include_top=False)
+model = InceptionResNetV2(weights='imagenet', include_top=False)
 extract_feature_model = Sequential()
-# extract_feature_model.add(model)
-# extract_feature_model.add(Flatten())
-# extract_feature_model.summary()
+extract_feature_model.add(model)
+extract_feature_model.add(Flatten())
+extract_feature_model.summary()
     
 # Load model to predict
 svm_covid_file = open(app.config['MODEL_COVID'], 'rb')
@@ -78,8 +78,8 @@ def get_all_patients():
     print("GET DATA")
     try:
         cursor = mysql.connection.cursor()
-        cursor.execute("SELECT * FROM Patient")
-        patients = cursor.fetchall()
+        cursor.execute('SELECT * FROM Patient, Image WHERE Image.patient_id = Patient.id')
+        patients = cursor.fetchall()#
         print("patients",patients)
         output = [] 
         for patient in patients:
@@ -94,6 +94,11 @@ def get_all_patients():
                 'phone' : patient[6],
                 'email' : patient[7],
                 'quarantine_status' : patient[8],
+                'id_image':patient[9],
+                'url':patient[10],
+                'uploaded_date':patient[11],
+                'diagnostis_result': patient[12],
+                'size_image': patient[13],
             }) 
         resp = jsonify({'patients': output}) 
         return resp
@@ -132,13 +137,15 @@ def get_all_images():
         if cursor:
             cursor.close()
 
-@app.route('/get_patient/<id>', methods =['GET']) 
-def get_patient_id(id): 
+@app.route('/get_patient_by_id', methods =['POST']) 
+def get_patient_id(): 
     cursor = None
     print("GET DATA")
+    id_patient = request.form['id'] 
+    print("id_patient",id_patient)
     try:
         cursor = mysql.connection.cursor()
-        cursor.execute('SELECT * FROM Patient WHERE id=%s', [id])
+        cursor.execute('SELECT * FROM Patient, Image WHERE Patient.id=%s and Image.patient_id = Patient.id', [id_patient])
         patients = cursor.fetchall()
         print("patients",patients)
         output = [] 
@@ -154,7 +161,13 @@ def get_patient_id(id):
                 'phone' : patient[6],
                 'email' : patient[7],
                 'quarantine_status' : patient[8],
-            }) 
+                'id_image':patient[9],
+                'url':patient[10],
+                'uploaded_date':patient[11],
+                'diagnostis_result': patient[12],
+                'size_image': patient[13],
+            })      
+            
         print("output", output)
         resp = jsonify({'patients': output}) 
         return resp
@@ -234,12 +247,11 @@ def processing_data(imagePaths):
     return features
 
 def dcm2jpg(picture_path, head):
+    print("picture_path", picture_path)
     ds=pydicom.read_file(picture_path)
+    print("ds", ds)
     img=ds.pixel_array #extract image information
-    print(type(head))
-    head =''.join(head)
-    print(type(head))
-    image_path = os.path.join(app.config['UPLOAD_FOLDER'], head + '.jpg')
+    image_path = os.path.join(app.config['LOCAL_FOLDER'], head + '.jpg')
     imageio.imwrite(image_path,img)
     return image_path
 
@@ -296,38 +308,72 @@ def upload_file():
         return resp
     if file_upload and allowed_file(file_upload.filename):
         filename = secure_filename(file_upload.filename)
-        filename_array = filename.split(".")
-        tail = filename_array[len(filename_array)-1]
-        head = filename_array[0:len(filename_array)-1]
-        image_path_server = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         image_path_local = os.path.join(app.config['LOCAL_FOLDER'], filename)
         file_upload.save(image_path_local)
-        file_upload.save(image_path_server)
+        filename_array = filename.split(".")
+        tail = filename_array[1]
+        head = filename_array[0]
+        print("tail", tail)
+        print("head", head)
+        if tail == 'dcm':
+            print("This is dcm file")
+            image_path_local = dcm2jpg(image_path_local, head)
         resp = jsonify({'message' :  image_path_local   })
         resp.status_code = 201
         return resp
         print("head:", head)
-        # if tail == 'dcm':
-        #     print("This is dcm file")
-        #     image_path_server = dcm2jpg(image_path_server, head)
-        # image_input_paths.append(image_path_server)
-        # if len(image_input_paths) > 0:
-        #     print(image_input_paths )
-        #     features_test = processing_data(image_input_paths)
-        #     sc_x = StandardScaler()
-        #     testX = sc_x.fit_transform(features_test)
-        #     y_pred = svm_covid_model.predict(testX)
-        #     labelDict = {0:"NORMAL", 1:"COVID-19", 2:"PNEUMONIA"}
-        #     print("type y_pred:", type(y_pred))
-        #     result = labelDict[y_pred[0]]
-        #     print("type result:", type(result))
-        #     resp = jsonify({'message' : result})
-        #     resp.status_code = 201
-        #     return resp
     else:
         resp = jsonify({'message' : 'Allowed file types are txt, pdf, png, jpg, jpeg, gif'})
         resp.status_code = 400
         return resp
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    image_input_paths.clear()
+    cursor = None
+    print("PREDICT")
+    try:
+        url = request.form['url'] 
+        print(":", url)
+        file_name = url.split("/")[1] 
+        print("file_name", file_name)
+        if request.method == 'POST':
+            filename_array = file_name.split(".")
+            tail = filename_array[1]
+            head = filename_array[0]
+            print("tail", tail)
+            print("head", head)
+            if tail == 'dcm':
+                print("This is dcm file")
+                image_path_local = os.path.join(app.config['LOCAL_FOLDER'], head+".jpg")
+            else:
+                image_path_local = os.path.join(app.config['LOCAL_FOLDER'], file_name)
+            image_input_paths.append(image_path_local)
+            print(image_path_local )
+            features_test = processing_data(image_input_paths)
+            sc_x = StandardScaler()
+            testX = sc_x.fit_transform(features_test)
+            y_pred = svm_covid_model.predict(testX)
+            labelDict = {0:"NORMAL", 1:"COVID-19", 2:"PNEUMONIA"}
+            print("type y_pred:", type(y_pred))
+            result = labelDict[y_pred[0]]
+            print("type result:", type(result))
+            print("type result:", type(result))
+            print("result:",result)
+            resp = jsonify({'message' : result})
+            resp.status_code = 201
+            return resp
+        else:
+            resp = jsonify({'message' : 'Bad Request - invalid credendtials'})
+            resp.status_code = 400
+            return resp
+    except Exception as e:
+        print(e)
+    finally:
+        if cursor:
+            cursor.close()
+
+
 
 @app.route('/add_patient',  methods=['POST', 'GET', 'OPTIONS'])
 @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
@@ -364,9 +410,9 @@ def add_patient():
             value = randint(0, 10)
             id_patient = str(id_patient)+ str(value) + fullname
             print("total patient:", total_patient)
-            # sql = "INSERT INTO Patient(id, fullname, created_date, gender, date_of_birth, address, phone, email, quarantine_status) VALUES(%s,  %s, %s, %s, %s, %s, %s, %s, %s)"
-            # fields = ( id_patient, fullname, created_date, gender, date_of_birth, address, phone, email, quarantine_status)
-            # cursor.execute(sql, fields)
+            sql = "INSERT INTO Patient(id, fullname, created_date, gender, date_of_birth, address, phone, email, quarantine_status) VALUES(%s,  %s, %s, %s, %s, %s, %s, %s, %s)"
+            fields = ( id_patient, fullname, created_date, gender, date_of_birth, address, phone, email, quarantine_status)
+            cursor.execute(sql, fields)
             sql = "INSERT INTO Image(url, uploaded_date, diagnostis_result,size_image, patient_id) VALUES(%s,  %s, %s, %s,%s)"
             fields = (url, created_date, diagnostis_result, size_image, id_patient) 
             cursor.execute(sql, fields)
