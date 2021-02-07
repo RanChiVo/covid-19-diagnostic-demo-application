@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import "../Show_result_data/show_result_data.css"
-import { Form, TextArea, Button,Icon} from 'semantic-ui-react'
+import { Form, TextArea, Button, Icon } from 'semantic-ui-react'
 import ArrowBackSharpIcon from '@material-ui/icons/ArrowBackSharp';
 
 class ShowResultData extends Component {
@@ -10,19 +10,43 @@ class ShowResultData extends Component {
         super(props);
         console.log("props:", props.location.data);
         this.state = {
+            stateTestAvailable: false,
             isLoaded: false,
-            resultDianologis: props.location.data
+            resultDianologis: props.location.data,
+            id: "",
+            test_time: "",
+            result_time: "",
+            result: "",
+            patient_id: "",
+            comments: ""
         };
     }
 
     componentDidMount() {
-        axios.get('http://127.0.0.1:5000/get_patients').then(response => {
-            console.log("data:", response.data);
-            this.setState({
-                items: response.data.patients,
-                isLoaded: true,
+        let url = this.state.resultDianologis.url;
+        let id_patient = this.state.resultDianologis.id;
+        const formData = new FormData();
+        formData.append("id_patient", id_patient);
+
+        fetch("http://127.0.0.1:5000/get_test_id_patient", {
+            method: "POST",
+            body: formData
+        }).then(res => res.json())
+            .then(function (file) {
+                let response = file["test"];
+                if (response != "emty") {
+                    this.setState({ stateTestAvailable: true })
+                    this.setState({ id: response.id });
+                    this.setState({ test_time: response.test_time });
+                    this.setState({ result_time: response.result_time });
+                    this.setState({ patient_id: response.patient_id });
+                    this.setState({ comments: response.comments });
+                }
+            })
+            .catch(function (response) {
+                //handle error
+                console.log(response);
             });
-        });
         this.setState({ isLoaded: true });
     }
 
@@ -31,6 +55,89 @@ class ShowResultData extends Component {
         history.push({
             pathname: `/`,
         })
+    }
+
+    handleSave() {
+        if (this.state.stateTestAvailable) {
+            var formData = new FormData();
+            formData.append("id", this.state.id);
+            console.log("id", this.state.id);
+
+            formData.append("test_time", this.state.test_time);
+            console.log("test_time", this.state.test_time);
+
+            formData.append("result_time", this.state.result_time);
+            console.log("result_time", this.state.result_time);
+
+            formData.append("result", this.state.result);
+            console.log("result", this.state.result);
+
+            formData.append("patient_id", this.state.resultDianologis.patient_id);
+            console.log("patient_id", this.state.resultDianologis.patient_id);
+
+            formData.append("comments", this.state.comments);
+            console.log("comments", this.state.comments);
+
+            const url = "http://127.0.0.1:5000/update_test";
+
+            axios.post(url, formData, { processData: false },
+                { contentType: false }, {
+
+                headers: new Headers({
+                    'Access-Control-Allow-Origin': '*'
+                })
+            })
+                .then(function (response) {
+                    console.log("OK NHA");
+                    //handle success
+                    console.log(response);
+                    alert("Saved successful");
+                })
+                .catch(function (response) {
+                    //handle error
+                    console.log(response);
+                });
+
+        }
+
+        else {
+
+            var formData = new FormData();
+            formData.append("test_time", this.state.test_time);
+            console.log("test_time", this.state.test_time);
+
+            formData.append("result_time", this.state.result_time);
+            console.log("result_time", this.state.result_time);
+
+            formData.append("result", this.state.result);
+            console.log("result", this.state.result);
+
+            formData.append("patient_id", this.state.resultDianologis.patient_id);
+            console.log("patient_id", this.state.resultDianologis.patient_id);
+
+            formData.append("comments", this.state.comments);
+            console.log("comments", this.state.comments);
+
+            const url = "http://127.0.0.1:5000/add_test";
+
+            axios.post(url, formData, { processData: false },
+                { contentType: false }, {
+
+                headers: new Headers({
+                    'Access-Control-Allow-Origin': '*'
+                })
+            })
+                .then(function (response) {
+                    console.log("OK NHA");
+                    alert("Saved successful");
+                    //handle success
+                    console.log(response);
+                })
+                .catch(function (response) {
+                    //handle error
+                    console.log(response);
+                });
+        }
     }
 
     render() {
@@ -42,7 +149,7 @@ class ShowResultData extends Component {
                 <div className="resultMainPage">
                     <div className="back_home">
                         <Button inverted color='blue' icon labelPosition='left' onClick={() => this.handleClick()}>
-                        Data list
+                            Data list
                              <Icon name='left arrow' />
                         </Button>
                     </div>
@@ -165,16 +272,20 @@ class ShowResultData extends Component {
                                         <label style={{ color: "white" }}>Test Time</label>
                                         <Form.Input
                                             fluid
-                                            id='testTiem'
+                                            id='test_time'
                                             type='date'
+                                            value={this.state.test_time}
+                                            onChange={this.handleChangeTestTime}
                                         />
                                     </Form.Field>
                                     <Form.Field>
                                         <label style={{ color: "white" }}>Result time</label>
                                         <Form.Input
                                             fluid
-                                            id='resultTime'
+                                            id='result_time'
                                             type='date'
+                                            value={this.state.result_time}
+                                            onChange={this.handleChangeResultTime}
                                         />
                                     </Form.Field>
                                 </Form.Group>
@@ -195,23 +306,27 @@ class ShowResultData extends Component {
                                         <Form.Input
                                             fluid
                                             id='result'
-                                            value={this.state.resultDianologis && this.state.resultDianologis.diagnostis_result}
+                                            value={this.state.result}
+                                            onChange={this.handleChangeResult}
                                         />
                                     </Form.Field>
                                 </Form.Group>
                                 <Form.Group widths='equal'>
                                     <Form.Field>
                                         <label style={{ color: "white" }}>Comments</label>
-                                        <Form.TextArea rows={2} placeholder='Tell us more' />
+                                        <Form.TextArea rows={2}
+                                            value={this.state.comments}
+                                            onChange={this.handleChangeComments}
+                                            placeholder='Tell us more' />
                                     </Form.Field>
                                 </Form.Group>
 
                             </Form>
                             <div className="saveCancel">
                                 <Button.Group>
-                                    <Button  onClick={() => this.handleClick()} >Cancel</Button>
+                                    <Button onClick={() => this.handleClick()} >Cancel</Button>
                                     <Button.Or />
-                                    <Button inverted color='blue'>Save</Button>
+                                    <Button inverted color='blue' onClick={() => this.handleSave()}>Save</Button>
                                 </Button.Group>
                             </div>
 
@@ -221,6 +336,22 @@ class ShowResultData extends Component {
             );
         }
     }
-}
+    handleChangeTestTime = (_e, { value }) => {
+        this.setState({ test_time: value });
+    };
+
+    handleChangeResultTime = (_e, { value }) => {
+        this.setState({ result_time: value });
+    };
+
+    handleChangeResult = (_e, { value }) => {
+        this.setState({ result: value });
+    };
+
+    handleChangeComments = (_e, { value }) => {
+        this.setState({ comments: value });
+    };
+
+};
 
 export default ShowResultData;

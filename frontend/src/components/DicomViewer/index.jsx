@@ -23,7 +23,7 @@ import DetailsSharpIcon from '@material-ui/icons/DetailsSharp';
 import FeaturedVideoSharpIcon from '@material-ui/icons/FeaturedVideoSharp';
 import MaximizeSharpIcon from '@material-ui/icons/MaximizeSharp';
 import Loader from 'react-loader-spinner'
-import axios from 'axios';
+import AutorenewIcon from '@material-ui/icons/Autorenew';
 
 
 class DicomViewerTest extends React.Component {
@@ -93,6 +93,10 @@ class DicomViewerTest extends React.Component {
     evt.stopPropagation();
     evt.preventDefault();
     evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+  }
+
+  handleReset(){
+    this.resolveListenner();
   }
 
   setupListenner = () => {
@@ -451,6 +455,18 @@ class DicomViewerTest extends React.Component {
             startIcon={<TimelineSharpIcon />}
             title="Freeform ROI"
           >
+          </Button>
+          <Button 
+          onClick={() => {
+            this.handleReset()
+          }}
+            className="list_group_item"
+            color="primary"
+            size="small"
+            title="Freeform ROI"
+            startIcon={<AutorenewIcon />}
+          >
+            Reset
           </Button>
           <button className="detect_btn" onClick={() => this.handle_detect_click()} >Detect COVID-19</button>
         </div>

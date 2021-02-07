@@ -149,27 +149,58 @@ def get_patient_id():
         patients = cursor.fetchall()
         print("patients",patients)
         output = [] 
-        for patient in patients:    
-            print(patient[1])
-            output.append({ 
-                'id': patient[0], 
-                'fullname' : patient[1],
-                'created_date' : patient[2],
-                'gender' : patient[3],
-                'date_of_birth' : patient[4],
-                'address' : patient[5],
-                'phone' : patient[6],
-                'email' : patient[7],
-                'quarantine_status' : patient[8],
-                'id_image':patient[9],
-                'url':patient[10],
-                'uploaded_date':patient[11],
-                'diagnostis_result': patient[12],
-                'size_image': patient[13],
-            })      
+        if patients:
+            for patient in patients:
+                print(patient[1])
+                output.append({ 
+                    'id': patient[0], 
+                    'fullname' : patient[1],
+                    'created_date' : patient[2],
+                    'gender' : patient[3],
+                    'date_of_birth' : patient[4],
+                    'address' : patient[5],
+                    'phone' : patient[6],
+                    'email' : patient[7],
+                    'quarantine_status' : patient[8],
+                    'id_image':patient[9],
+                    'url':patient[10],
+                    'uploaded_date':patient[11],
+                    'diagnostis_result': patient[12],
+                    'size_image': patient[13],
+                })      
             
         print("output", output)
         resp = jsonify({'patients': output}) 
+        return resp
+    except Exception as e:
+        print(e)
+    finally:
+        if cursor:
+            cursor.close()
+
+@app.route('/get_test_id_patient', methods =['POST']) 
+def get_test_id_patient(): 
+    cursor = None
+    print("GET DATA")
+    id_patient = request.form['id_patient'] 
+    print("id_patient",id_patient)
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT * FROM Test WHERE patient_id=%s', [id_patient])
+        test_info = cursor.fetchone()
+        print("test info",test_info)
+        output = {}
+        if test_info:
+            output['id'] = test_info[0]
+            output['test_time'] = test_info[1]
+            output['result_time'] = test_info[2]
+            output['result'] = test_info[3]
+            output['patient_id'] = test_info[4]
+            output['comments'] = test_info[5]
+            print("output", output)
+        else:
+            output="emty"
+        resp = jsonify({'test': output}) 
         return resp
     except Exception as e:
         print(e)
@@ -184,7 +215,6 @@ def home():
 		return jsonify({'message' : 'You are already logged in', 'username' : username})
 	else:
 		resp = jsonify({'message' : 'Unauthorized'})
-		resp.status_code = 401
 		return resp
 
 @app.route('/login', methods=['POST'])
@@ -418,6 +448,81 @@ def add_patient():
             cursor.execute(sql, fields)
             mysql.connection.commit()
             resp = jsonify({'message' : 'Patientz added successfully!'})
+            resp.status_code = 200
+            return resp
+        else:
+            resp = jsonify({'message' : 'Bad Request - invalid credendtials'})
+            resp.status_code = 400
+            return resp
+
+    except Exception as e:
+        print(e)
+    finally:
+        if cursor:
+            cursor.close()
+
+@app.route('/add_test',  methods=['POST'])
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
+def add_test():
+    cursor = None
+    print("CREATE NEW TEST")
+    try:
+        test_time = request.form['test_time'] 
+        print("test time:", test_time)
+        result_time = request.form['result_time']
+        print("result_time:", result_time)
+        result = request.form["result"]
+        print("result:", result)
+        patient_id = request.form["patient_id"]
+        print("patient_id:", patient_id)
+        comments = request.form["comments"]
+        print("comments:", comments)
+        # validate the received values
+        if request.method == 'POST':
+            cursor = mysql.connection.cursor()
+            sql = "INSERT INTO Test(test_time, result_time, result, patient_id, comments) VALUES(%s,  %s, %s, %s, %s)"
+            fields = ( test_time, result_time, result, patient_id, comments)
+            cursor.execute(sql, fields)
+            mysql.connection.commit()
+            resp = jsonify({'message' : 'Test added successfully!'})
+            resp.status_code = 200
+            return resp
+        else:
+            resp = jsonify({'message' : 'Bad Request - invalid credendtials'})
+            resp.status_code = 400
+            return resp
+
+    except Exception as e:
+        print(e)
+    finally:
+        if cursor:
+            cursor.close()
+
+@app.route('/update_test',  methods=['POST'])
+def update_test():
+    cursor = None
+    print("UPDATE TEST")
+    try:
+        id = request.form['id'] 
+        print("id:", id)
+        test_time = request.form['test_time'] 
+        print("test time:", test_time)
+        result_time = request.form['result_time']
+        print("result_time:", result_time)
+        result = request.form["result"]
+        print("result:", result)
+        patient_id = request.form["patient_id"]
+        print("patient_id:", patient_id)
+        comments = request.form["comments"]
+        print("comments:", comments)
+        # validate the received values
+        if request.method == 'POST':
+            cursor = mysql.connection.cursor()
+            sql = "UPDATE Test SET test_time=%s, result_time=%s, result=%s, patient_id=%s, comments=%s WHERE id=%s"
+            fields = ( test_time, result_time, result, patient_id, comments,id)
+            cursor.execute(sql, fields)
+            mysql.connection.commit()
+            resp = jsonify({'message' : 'Test updated successfully!'})
             resp.status_code = 200
             return resp
         else:
