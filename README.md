@@ -1,1 +1,1 @@
-# demo_covid
+# covid-19 diagnostic demo application
