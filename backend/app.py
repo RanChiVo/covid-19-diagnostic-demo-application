@@ -199,7 +199,7 @@ def get_test_id_patient():
             output['comments'] = test_info[5]
             print("output", output)
         else:
-            output="emty"
+            output="empty"
         resp = jsonify({'test': output}) 
         return resp
     except Exception as e:

@@ -74,8 +74,8 @@ class ShowListData extends Component {
         filter: textFilter({ style: this.style_filter })
       },
       {
-        dataField: 'phone',
-        text: 'Phone',
+        dataField: 'url',
+        text: 'Image',
         sort: true,
         filter: textFilter({ style: this.style_filter })
       },

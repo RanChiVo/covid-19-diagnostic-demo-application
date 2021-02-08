@@ -489,8 +489,8 @@ class DicomViewerTest extends React.Component {
                   <li><span>Adress: </span><span id="address">{this.state.infoPatient && this.state.infoPatient.address}</span><br /></li>
                   <li><span>Phone: </span><span id="phone">{this.state.infoPatient && this.state.infoPatient.phone}</span><br /></li>
                   <li><span>Email: </span><span id="email">{this.state.infoPatient && this.state.infoPatient.email}</span><br /></li>
-                  <li><h4>Image information</h4></li>
                   <li><span>Quarantine status: </span><span id="quarantine_status">{this.state.infoPatient && this.state.infoPatient.quarantine_status}</span><br /></li>
+                  <li><h4>Image information</h4></li>
                   <li><span>Image id: </span><span id="id_image">{this.state.infoPatient && this.state.infoPatient.id_image}</span><br /></li>
                   <li><span>url: </span><span id="url">{this.state.infoPatient && this.state.infoPatient.url}</span><br /></li>
                   <li><span>Uploaded date: </span><span id="uploaded_date">{this.state.infoPatient && this.state.infoPatient.uploaded_date}</span><br /></li>

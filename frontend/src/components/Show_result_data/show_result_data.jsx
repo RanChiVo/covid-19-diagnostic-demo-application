@@ -27,6 +27,7 @@ class ShowResultData extends Component {
         let id_patient = this.state.resultDianologis.id;
         const formData = new FormData();
         formData.append("id_patient", id_patient);
+        let self= this;
 
         fetch("http://127.0.0.1:5000/get_test_id_patient", {
             method: "POST",
@@ -34,7 +35,9 @@ class ShowResultData extends Component {
         }).then(res => res.json())
             .then(function (file) {
                 let response = file["test"];
-                if (response != "emty") {
+                console.log("repo",response["patient_id"])
+                if (response != "empty") {
+                    console.log("ok");
                     this.setState({ stateTestAvailable: true })
                     this.setState({ id: response.id });
                     this.setState({ test_time: response.test_time });
@@ -58,6 +61,7 @@ class ShowResultData extends Component {
     }
 
     handleSave() {
+        let id_patient = this.state.resultDianologis.id;
         if (this.state.stateTestAvailable) {
             var formData = new FormData();
             formData.append("id", this.state.id);
@@ -72,8 +76,8 @@ class ShowResultData extends Component {
             formData.append("result", this.state.result);
             console.log("result", this.state.result);
 
-            formData.append("patient_id", this.state.resultDianologis.patient_id);
-            console.log("patient_id", this.state.resultDianologis.patient_id);
+            formData.append("patient_id", id_patient);
+            console.log("patient_id", id_patient);
 
             formData.append("comments", this.state.comments);
             console.log("comments", this.state.comments);
@@ -112,8 +116,8 @@ class ShowResultData extends Component {
             formData.append("result", this.state.result);
             console.log("result", this.state.result);
 
-            formData.append("patient_id", this.state.resultDianologis.patient_id);
-            console.log("patient_id", this.state.resultDianologis.patient_id);
+            formData.append("patient_id", id_patient);
+            console.log("patient_id", id_patient);
 
             formData.append("comments", this.state.comments);
             console.log("comments", this.state.comments);
@@ -161,11 +165,11 @@ class ShowResultData extends Component {
                             <Form>
                                 <Form.Group widths='equal'>
                                     <Form.Field>
-                                        <label style={{ color: "white" }}>First Name</label>
+                                        <label style={{ color: "white" }}>Id Patient</label>
                                         <Form.Input
                                             fluid
-                                            id='fullname'
-                                            value={this.state.resultDianologis && this.state.resultDianologis.fullname}
+                                            id='id'
+                                            value={this.state.resultDianologis && this.state.resultDianologis.id}
                                         />
                                     </Form.Field>
                                     <Form.Field>
